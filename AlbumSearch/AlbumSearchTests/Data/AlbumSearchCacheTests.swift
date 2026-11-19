@@ -1,10 +1,9 @@
 import Testing
 @testable import AlbumSearch
 
-// REQUISITO [TEST-02]: Pruebas unitarias de la caché de Data.
+// REQUISITO [TEST]: Pruebas unitarias de la caché de Data.
 @Suite("Caché de búsquedas")
 struct AlbumSearchCacheTests {
-    // DECISIÓN: Probar el límite de memoria que hemos elegido para la implementación.
     @Test("Al llegar al límite se elimina la entrada con el vencimiento más próximo")
     func cacheHasLimitedCapacity() async throws {
         let clock = ManualClock()
@@ -19,7 +18,7 @@ struct AlbumSearchCacheTests {
         #expect(try await cache.albums(for: "query-0") == nil)
     }
 
-    // REQUISITO [CAN-01]: Respetar la cancelación al guardar resultados.
+    // REQUISITO [CANCELACION]: Respetar la cancelación al guardar resultados.
     @Test("Una tarea cancelada no guarda resultados al entrar en la caché")
     @MainActor
     func cancelledWriteDoesNotStoreResults() async throws {
@@ -31,7 +30,7 @@ struct AlbumSearchCacheTests {
         #expect(try await cache.albums(for: "queen") == nil)
     }
 
-    // REQUISITO [CAN-01]: Respetar la cancelación al leer una entrada vigente.
+    // REQUISITO [CANCELACION]: Respetar la cancelación al leer una entrada vigente.
     @Test("Una tarea cancelada tampoco obtiene un resultado cacheado")
     @MainActor
     func cancelledReadDoesNotReturnCachedResults() async throws {

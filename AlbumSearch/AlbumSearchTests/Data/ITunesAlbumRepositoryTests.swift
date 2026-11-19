@@ -2,8 +2,7 @@ import Foundation
 import Testing
 @testable import AlbumSearch
 
-// REQUISITO [TEST-02]: Tests de Data que validan el uso y la expiración de la caché.
-// REQUISITO PROPIO [TEST-03]: Esta suite usa Swift Testing.
+// REQUISITO [TEST]: Tests de Data que validan el uso y la expiración de la caché.
 @Suite("Repositorio de iTunes y caché")
 struct ITunesAlbumRepositoryTests {
     @Test("Convierte la respuesta de iTunes al modelo de la app")
@@ -21,7 +20,7 @@ struct ITunesAlbumRepositoryTests {
         )])
     }
 
-    // REQUISITO [CACHE-03, TEST-02]: Una entrada vigente debe evitar otra petición de red.
+    // REQUISITO [CACHE]: Una entrada vigente debe evitar otra petición de red.
     @Test("La caché vigente evita otra petición, también con resultados vacíos", arguments: [albumJSON, emptyJSON])
     func validCacheAvoidsNetwork(json: Data) async throws {
         let client = HTTPClientStub(responses: [.success(json)])
@@ -36,7 +35,7 @@ struct ITunesAlbumRepositoryTests {
         #expect(await client.requests.count == 1)
     }
 
-    // REQUISITO [CACHE-04, TEST-02]: Al caducar, recuperar de red y reutilizar el nuevo resultado.
+    // REQUISITO [CACHE]: Al caducar, recuperar de red y reutilizar el nuevo resultado.
     @Test("Al caducar se consulta la red y se reemplaza la entrada")
     func expiredCacheIsReplaced() async throws {
         let client = HTTPClientStub(responses: [.success(albumJSON), .success(emptyJSON)])
@@ -53,7 +52,7 @@ struct ITunesAlbumRepositoryTests {
         #expect(await client.requests.count == 2)
     }
 
-    // REQUISITO [CACHE-01]: Cada query conserva sus propios resultados.
+    // REQUISITO [CACHE]: Cada query conserva sus propios resultados.
     @Test("Cada query tiene su propia entrada")
     func queriesHaveIndependentEntries() async throws {
         let client = HTTPClientStub(responses: [.success(albumJSON), .success(emptyJSON)])
@@ -133,7 +132,7 @@ struct ITunesAlbumRepositoryTests {
         #expect(album.releaseDate == nil)
     }
 
-    // REQUISITO [CAN-01]: La cancelación debe impedir continuar aunque el cliente no coopere.
+    // REQUISITO [CANCELACION]: La cancelación debe impedir continuar aunque el cliente no coopere.
     @Test("Una respuesta cancelada no llena la caché aunque el cliente siga trabajando")
     func cancelledResponseIsNotCached() async throws {
         let client = ControlledHTTPClient()

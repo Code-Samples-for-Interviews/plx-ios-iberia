@@ -1,6 +1,5 @@
 import Synchronization
 
-// DECISIÓN: Adelantar el reloj permite probar la expiración sin esperas ni estado compartido inseguro.
 final class ManualClock: Sendable {
     private let instant = Mutex(ContinuousClock.now)
 
