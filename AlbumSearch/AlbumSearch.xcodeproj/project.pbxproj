@@ -1,0 +1,267 @@
+// !$*UTF8*$!
+{
+	"classes" = {
+	};
+	"objectVersion" = "60";
+	"archiveVersion" = "1";
+	"objects" = {
+		"FBDC4F23F93125BBEEAE800C" = {
+			"isa" = "PBXGroup";
+			"name" = "Products";
+			"children" = (
+				"8BCD5BC4CDFDF0918087C782",
+			);
+			"sourceTree" = "<group>";
+		};
+		"98F54143AB4E86B28C3AFEE0" = {
+			"buildConfigurationList" = "49EA05A46B1A86EA7E413B43";
+			"targets" = (
+				"C13732C8E715C9BEE4FA51C9",
+			);
+			"developmentRegion" = "es";
+			"knownRegions" = (
+				"es",
+				"Base",
+			);
+			"isa" = "PBXProject";
+			"compatibilityVersion" = "Xcode 15.0";
+			"productRefGroup" = "FBDC4F23F93125BBEEAE800C";
+			"projectDirPath" = "";
+			"attributes" = {
+				"LastUpgradeCheck" = "1600";
+				"BuildIndependentTargetsInParallel" = "YES";
+			};
+			"hasScannedForEncodings" = "0";
+			"projectRoot" = "";
+			"mainGroup" = "B28B7AF69320201D1CF206EB";
+		};
+		"B28B7AF69320201D1CF206EB" = {
+			"isa" = "PBXGroup";
+			"sourceTree" = "<group>";
+			"children" = (
+				"50C70246D81E6E46E74E2FC4",
+				"FBDC4F23F93125BBEEAE800C",
+			);
+		};
+		"5A2B611775BB0607649C71F5" = {
+			"path" = "AlbumSearchApp.swift";
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "<group>";
+		};
+		"3685E330EC5277A9DD5661C6" = {
+			"path" = "Assets.xcassets";
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "folder.assetcatalog";
+			"sourceTree" = "<group>";
+		};
+		"5A8C91857F674E16E2724F47" = {
+			"isa" = "XCBuildConfiguration";
+			"buildSettings" = {
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents" = "YES";
+				"DEBUG_INFORMATION_FORMAT" = "dwarf-with-dsym";
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation" = "YES";
+				"SWIFT_COMPILATION_MODE" = "wholemodule";
+				"MARKETING_VERSION" = "1.0";
+				"TARGETED_DEVICE_FAMILY" = "1,2";
+				"LD_RUNPATH_SEARCH_PATHS" = "$(inherited) @executable_path/Frameworks";
+				"GENERATE_INFOPLIST_FILE" = "YES";
+				"INFOPLIST_KEY_UILaunchScreen_Generation" = "YES";
+				"INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone" = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				"INFOPLIST_KEY_CFBundleDisplayName" = "Buscador de álbumes";
+				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+				"ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME" = "AccentColor";
+				"INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad" = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				"CODE_SIGN_STYLE" = "Automatic";
+				"INFOPLIST_KEY_LSApplicationCategoryType" = "public.app-category.music";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "com.example.AlbumSearch";
+				"CURRENT_PROJECT_VERSION" = "1";
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+			};
+			"name" = "Release";
+		};
+		"78AE8C6BEB2A40A6D824CCEE" = {
+			"isa" = "PBXFrameworksBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = (
+			);
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"F16ED0CE20493C3C793E5BCF" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "5A2B611775BB0607649C71F5";
+		};
+		"8A8642C6B28662881237D956" = {
+			"isa" = "XCConfigurationList";
+			"defaultConfigurationIsVisible" = "0";
+			"defaultConfigurationName" = "Release";
+			"buildConfigurations" = (
+				"E9B2E96ABC5F6856F2BE79CF",
+				"5A8C91857F674E16E2724F47",
+			);
+		};
+		"971ED9D05B25DB6C4D7680D4" = {
+			"isa" = "PBXSourcesBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = (
+				"F16ED0CE20493C3C793E5BCF",
+				"C640255321AFF2EDABB36716",
+			);
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"364863F9F2E558B0F50473FC" = {
+			"isa" = "PBXResourcesBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = (
+				"2E03FC9C8D896B37E45626A1",
+			);
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"49EA05A46B1A86EA7E413B43" = {
+			"isa" = "XCConfigurationList";
+			"defaultConfigurationIsVisible" = "0";
+			"defaultConfigurationName" = "Release";
+			"buildConfigurations" = (
+				"89E1FD6268CC0F221A2BE178",
+				"E6DE6C99132752C914FEF632",
+			);
+		};
+		"E6DE6C99132752C914FEF632" = {
+			"isa" = "XCBuildConfiguration";
+			"buildSettings" = {
+				"ENABLE_USER_SCRIPT_SANDBOXING" = "YES";
+				"CLANG_ENABLE_MODULES" = "YES";
+				"DEBUG_INFORMATION_FORMAT" = "dwarf-with-dsym";
+				"SWIFT_COMPILATION_MODE" = "wholemodule";
+				"IPHONEOS_DEPLOYMENT_TARGET" = "18.0";
+				"SDKROOT" = "iphoneos";
+				"SWIFT_VERSION" = "6.0";
+				"SWIFT_STRICT_CONCURRENCY" = "complete";
+			};
+			"name" = "Release";
+		};
+		"2E03FC9C8D896B37E45626A1" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "3685E330EC5277A9DD5661C6";
+		};
+		"89E1FD6268CC0F221A2BE178" = {
+			"isa" = "XCBuildConfiguration";
+			"buildSettings" = {
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "$(inherited) DEBUG";
+				"ONLY_ACTIVE_ARCH" = "YES";
+				"ENABLE_USER_SCRIPT_SANDBOXING" = "YES";
+				"DEBUG_INFORMATION_FORMAT" = "dwarf";
+				"IPHONEOS_DEPLOYMENT_TARGET" = "18.0";
+				"CLANG_ENABLE_MODULES" = "YES";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-Onone";
+				"SWIFT_VERSION" = "6.0";
+				"SDKROOT" = "iphoneos";
+				"SWIFT_STRICT_CONCURRENCY" = "complete";
+			};
+			"name" = "Debug";
+		};
+		"8BCD5BC4CDFDF0918087C782" = {
+			"path" = "AlbumSearch.app";
+			"isa" = "PBXFileReference";
+			"explicitFileType" = "wrapper.application";
+			"sourceTree" = "BUILT_PRODUCTS_DIR";
+		};
+		"C13732C8E715C9BEE4FA51C9" = {
+			"productType" = "com.apple.product-type.application";
+			"productReference" = "8BCD5BC4CDFDF0918087C782";
+			"buildConfigurationList" = "8A8642C6B28662881237D956";
+			"productName" = "AlbumSearch";
+			"isa" = "PBXNativeTarget";
+			"buildPhases" = (
+				"971ED9D05B25DB6C4D7680D4",
+				"78AE8C6BEB2A40A6D824CCEE",
+				"364863F9F2E558B0F50473FC",
+			);
+			"dependencies" = (
+			);
+			"name" = "AlbumSearch";
+			"buildRules" = (
+			);
+		};
+		"E9B2E96ABC5F6856F2BE79CF" = {
+			"isa" = "XCBuildConfiguration";
+			"buildSettings" = {
+				"INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad" = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				"MARKETING_VERSION" = "1.0";
+				"INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone" = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				"ONLY_ACTIVE_ARCH" = "YES";
+				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+				"INFOPLIST_KEY_LSApplicationCategoryType" = "public.app-category.music";
+				"ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME" = "AccentColor";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "com.example.AlbumSearch";
+				"CURRENT_PROJECT_VERSION" = "1";
+				"INFOPLIST_KEY_CFBundleDisplayName" = "Buscador de álbumes";
+				"INFOPLIST_KEY_UILaunchScreen_Generation" = "YES";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "$(inherited) DEBUG";
+				"DEBUG_INFORMATION_FORMAT" = "dwarf";
+				"TARGETED_DEVICE_FAMILY" = "1,2";
+				"CODE_SIGN_STYLE" = "Automatic";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-Onone";
+				"LD_RUNPATH_SEARCH_PATHS" = "$(inherited) @executable_path/Frameworks";
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents" = "YES";
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation" = "YES";
+				"GENERATE_INFOPLIST_FILE" = "YES";
+			};
+			"name" = "Debug";
+		};
+		"8231D345A387E595D49715B1" = {
+			"isa" = "PBXFileReference";
+			"path" = "AlbumSearchView.swift";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "<group>";
+		};
+		"C640255321AFF2EDABB36716" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "8231D345A387E595D49715B1";
+		};
+		"650D3C6E87365F693E63DBC6" = {
+			"isa" = "PBXGroup";
+			"path" = "App";
+			"sourceTree" = "<group>";
+			"children" = (
+				"5A2B611775BB0607649C71F5",
+			);
+		};
+		"180E6D926F2D15782086F37D" = {
+			"isa" = "PBXGroup";
+			"path" = "Domain";
+			"sourceTree" = "<group>";
+			"children" = (
+			);
+		};
+		"5030E53F7AAD78846F204E23" = {
+			"isa" = "PBXGroup";
+			"path" = "Data";
+			"sourceTree" = "<group>";
+			"children" = (
+			);
+		};
+		"04BF213D69549D4D44D15B89" = {
+			"isa" = "PBXGroup";
+			"path" = "Presentation";
+			"sourceTree" = "<group>";
+			"children" = (
+				"8231D345A387E595D49715B1",
+			);
+		};
+		"50C70246D81E6E46E74E2FC4" = {
+			"isa" = "PBXGroup";
+			"path" = "AlbumSearch";
+			"sourceTree" = "<group>";
+			"children" = (
+				"650D3C6E87365F693E63DBC6",
+				"180E6D926F2D15782086F37D",
+				"5030E53F7AAD78846F204E23",
+				"04BF213D69549D4D44D15B89",
+				"3685E330EC5277A9DD5661C6",
+			);
+		};
+	};
+	"rootObject" = "98F54143AB4E86B28C3AFEE0";
+}

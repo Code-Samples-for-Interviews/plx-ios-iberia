@@ -1,0 +1,20 @@
+# Archivos locales de macOS y Xcode
+.DS_Store
+xcuserdata/
+*.xcuserstate
+
+# Compilaciones y resultados de pruebas
+DerivedData/
+build/
+*.xcresult
+*.xcarchive/
+*.dSYM/
+*.ipa
+
+# Firma y configuración privada
+*.p12
+*.p8
+*.mobileprovision
+.env
+.env.*
+!.env.example
