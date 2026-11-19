@@ -8,7 +8,7 @@ La idea es hacerlo sencillo, separar bien las responsabilidades y explicar las d
 
 ## Qué hay ahora
 
-Tenemos Domain y Data con sus tests: la lógica de entrada de búsqueda, la conexión con iTunes y la caché en memoria. La pantalla sigue siendo la inicial; conectaremos la búsqueda cuando añadamos VIP.
+Tenemos Domain y Data con sus tests: la lógica de entrada de búsqueda, la conexión con iTunes y la caché en memoria. También está el Presenter de búsqueda, con tests de XCTest. La pantalla sigue siendo la inicial; faltan el Interactor y conectar la vista.
 
 ## Cómo arrancarlo
 
@@ -58,15 +58,17 @@ Por ahora no hay persistencia en disco, datos caducados como alternativa sin con
 
 ## Tests
 
-En Xcode, seleccionamos el esquema **AlbumSearch** y ejecutamos **Product → Test** o **⌘U**. El target **AlbumSearchTests** usa Swift Testing para probar Domain y Data sin hacer llamadas de red.
+En Xcode, seleccionamos el esquema **AlbumSearch** y ejecutamos **Product → Test** o **⌘U**. El target **AlbumSearchTests** usa Swift Testing para Domain y Data, y XCTest para el Presenter. Ninguno de estos tests hace llamadas de red.
 
-Comprobamos búsquedas vacías, normalización, resultados, errores y cancelación antes y durante la consulta. Usamos repositorios de prueba y controlamos cuándo termina una petición; no hay que esperar a la red ni usar pausas para reproducir la cancelación. En Data también comprobamos la petición, el mapeo, el uso y la expiración de la caché, sus límites y que no guarde errores o respuestas canceladas. La caché tiene además sus propias pruebas de capacidad y cancelación al leer o guardar.
+Comprobamos búsquedas vacías, normalización, resultados, errores y cancelación antes y durante la consulta. Usamos repositorios de prueba y controlamos cuándo termina una petición; no hay que esperar a la red ni usar pausas para reproducir la cancelación. En Data también comprobamos la petición, el mapeo, el uso y la expiración de la caché, sus límites y que no guarde errores o respuestas canceladas. La caché tiene además sus propias pruebas de capacidad y cancelación al leer o guardar. Los tests del Presenter comprueban los estados de resultados, lista vacía, carga, reinicio y mensajes de error.
 
 ## Presentación y navegación
 
 Usaremos **VIP con Coordinator**. La vista muestra el estado, el Interactor coordina la búsqueda, el Presenter prepara lo que se muestra y el Coordinator gestiona la navegación.
 
-Lo iremos añadiendo cuando implementemos cada parte. Ahora mismo solo está la vista inicial.
+Vamos por partes. Esta tanda añade **SearchPresenter**, que recibe resultados o errores y prepara un estado: inicial, cargando, con resultados, vacío o con error. Se actualiza en MainActor y no conoce el repositorio ni gestiona tareas.
+
+El Interactor coordinará la búsqueda en la siguiente tanda. Después conectaremos la vista. El Coordinator llegará con el detalle, cuando haya navegación que gestionar.
 
 ## Accesibilidad
 
@@ -104,23 +106,24 @@ Los comentarios van junto al código que cumple cada punto y, cuando corresponde
 | CACHE-05 | Persistencia en disco (opcional) | No implementada; la caché en memoria cubre la prueba. |
 | TEST-01 | Tests de Domain con repositorios de prueba | Implementados. |
 | TEST-02 | Tests de Data sobre caché | Implementados. |
-| TEST-04 | Tests de Presentation (opcionales, valorados) | Pendientes; se harán con XCTest. |
+| TEST-04 | Tests de Presentation (opcionales, valorados) | Presenter probado con XCTest; faltan los tests del Interactor. |
 | ENT-01 | Repositorio con código y tests | Código y pruebas incluidos. |
 | DOC-01 | README con API, ejecución y decisiones | Se actualiza con cada tanda. |
-| ARQ-02 | VIP con Coordinator (petición propia) | Pendiente. |
+| ARQ-02 | VIP con Coordinator (petición propia) | Presenter implementado; Interactor, conexión de la vista y Coordinator pendientes. |
 | DIS-01 | SOLID e inyección de dependencias (petición propia) | Contratos e inyección en Domain y Data; se mantendrán en Presentation. |
-| TEST-03 | Swift Testing y XCTest (petición propia) | Swift Testing implementado; XCTest pendiente. |
+| TEST-03 | Swift Testing y XCTest (petición propia) | Ambos frameworks incluidos. |
 | A11Y-01 | Accesibilidad y resumen al pie de cada vista (petición propia) | Resúmenes incluidos en la pantalla inicial; faltan las nuevas vistas y las comprobaciones. |
 | CI-01 | Jobs de tests y entrega a TestFlight (petición propia) | Pendiente. |
 | SWIFT-01 | Swift 6 (perfil) | Configurado en Debug y Release. |
 
-<!-- PENDIENTE [TEST-04]: Marcar los tests de Presentation cuando se añadan. -->
+<!-- REQUISITO [TEST]: El Presenter tiene tests de XCTest; los del Interactor se añadirán en su tanda. -->
 <!-- PENDIENTE PROPIO [CI-01]: Marcar los jobs y su dependencia cuando se implemente el workflow. -->
 
 ## Lo siguiente
 
-1. Búsqueda con VIP, cancelación y control de respuestas antiguas, incluyendo tests con XCTest.
-2. Detalle y navegación con Coordinator.
-3. Jobs de GitHub para tests y entrega a TestFlight.
+1. Interactor de búsqueda: debounce, cancelación y control de respuestas antiguas, con tests de XCTest.
+2. Conectar la vista SwiftUI: campo de búsqueda, lista y estados de pantalla.
+3. Detalle y navegación con Coordinator.
+4. Jobs de GitHub para tests y entrega a TestFlight.
 
 Iremos actualizando este README con las decisiones y las instrucciones de cada tanda. El `.gitignore` deja fuera archivos locales de Xcode, compilaciones y credenciales.
