@@ -4,7 +4,7 @@ import Foundation
 struct SearchAlbums: Sendable {
     private let repository: any AlbumRepository
 
-    // REQUISITO PROPIO [DIS-01]: Inyección por inicializador para sustituir el repositorio en tests.
+    // Inyección por inicializador para sustituir el repositorio en tests.
     init(repository: any AlbumRepository) {
         self.repository = repository
     }

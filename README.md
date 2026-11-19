@@ -8,7 +8,7 @@ La idea es hacerlo sencillo, separar bien las responsabilidades y explicar las d
 
 ## Qué hay ahora
 
-Tenemos Domain y Data con sus tests: la lógica de entrada de búsqueda, la conexión con iTunes y la caché en memoria. También está el Presenter de búsqueda, con tests de XCTest. La pantalla sigue siendo la inicial; faltan el Interactor y conectar la vista.
+Tenemos Domain y Data con sus tests: la lógica de entrada de búsqueda, la conexión con iTunes y la caché en memoria. También están el Presenter y el Interactor de búsqueda, con tests de XCTest. La pantalla sigue siendo la inicial; falta conectarla con estas piezas.
 
 ## Cómo arrancarlo
 
@@ -35,7 +35,7 @@ No vamos a modularizar de entrada. Para el tamaño de esta prueba, las carpetas 
 
 La normalización vive en el caso de uso para que la interfaz y la caché utilicen la misma query. No cambiamos los espacios interiores ni los acentos.
 
-Comprobamos la cancelación antes y después de consultar el repositorio. Así tampoco devolvemos resultados si una implementación termina la consulta sin atender la cancelación. El debounce y el control de respuestas antiguas de la pantalla se añadirán con la búsqueda en Presentation.
+Comprobamos la cancelación antes y después de consultar el repositorio. Así tampoco devolvemos resultados si una implementación termina la consulta sin atender la cancelación. El Interactor añade el debounce y descarta respuestas antiguas; falta conectarlo con la búsqueda en la pantalla.
 
 ## Datos: iTunes y caché
 
@@ -58,17 +58,23 @@ Por ahora no hay persistencia en disco, datos caducados como alternativa sin con
 
 ## Tests
 
-En Xcode, seleccionamos el esquema **AlbumSearch** y ejecutamos **Product → Test** o **⌘U**. El target **AlbumSearchTests** usa Swift Testing para Domain y Data, y XCTest para el Presenter. Ninguno de estos tests hace llamadas de red.
+En Xcode, seleccionamos el esquema **AlbumSearch** y ejecutamos **Product → Test** o **⌘U**. El target **AlbumSearchTests** usa Swift Testing para Domain y Data, y XCTest para Presenter e Interactor. Ninguno de estos tests hace llamadas de red.
 
-Comprobamos búsquedas vacías, normalización, resultados, errores y cancelación antes y durante la consulta. Usamos repositorios de prueba y controlamos cuándo termina una petición; no hay que esperar a la red ni usar pausas para reproducir la cancelación. En Data también comprobamos la petición, el mapeo, el uso y la expiración de la caché, sus límites y que no guarde errores o respuestas canceladas. La caché tiene además sus propias pruebas de capacidad y cancelación al leer o guardar. Los tests del Presenter comprueban los estados de resultados, lista vacía, carga, reinicio y mensajes de error.
+Comprobamos búsquedas vacías, normalización, resultados, errores y cancelación antes y durante la consulta. Usamos repositorios de prueba y controlamos cuándo termina una petición; no hay que esperar a la red ni usar pausas para reproducir la cancelación. En Data también comprobamos la petición, el mapeo, el uso y la expiración de la caché, sus límites y que no guarde errores o respuestas canceladas. La caché tiene además sus propias pruebas de capacidad y cancelación al leer o guardar. Los tests del Presenter comprueban los estados de resultados, lista vacía, carga, reinicio y mensajes de error. Los del Interactor fuerzan respuestas fuera de orden, errores antiguos, limpieza del texto, cancelación y reintento.
 
 ## Presentación y navegación
 
 Usaremos **VIP con Coordinator**. La vista muestra el estado, el Interactor coordina la búsqueda, el Presenter prepara lo que se muestra y el Coordinator gestiona la navegación.
 
-Vamos por partes. Esta tanda añade **SearchPresenter**, que recibe resultados o errores y prepara un estado: inicial, cargando, con resultados, vacío o con error. Se actualiza en MainActor y no conoce el repositorio ni gestiona tareas.
+**SearchPresenter** recibe resultados o errores y prepara un estado: inicial, cargando, con resultados, vacío o con error. Se actualiza en MainActor y no conoce el repositorio ni gestiona tareas.
 
-El Interactor coordinará la búsqueda en la siguiente tanda. Después conectaremos la vista. El Coordinator llegará con el detalle, cuando haya navegación que gestionar.
+**SearchInteractor** recibe el texto y ejecuta el caso de uso. Espera 300 ms antes de buscar para evitar una petición por letra; este debounce es una decisión nuestra y se puede configurar.
+
+Cada cambio de texto invalida el intento anterior y limpia el estado del Presenter inmediatamente. Antes de presentar el resultado se comprueba la cancelación y el identificador del intento. También se descartan los errores antiguos. Cancelar no muestra un error, y se puede reintentar sin cambiar el texto.
+
+La tarea será de la vista mediante `.task(id: interactor.requestID)`: SwiftUI cancelará la anterior cuando cambie el identificador o desaparezca la pantalla. El Interactor es una operación async y no crea tareas independientes. Sus tests reproducen esa cancelación y también una respuesta tardía que llega sin haberla cancelado.
+
+En esta tanda no cambiamos la pantalla. Conectaremos la vista en la siguiente; el Coordinator llegará con el detalle, cuando haya navegación que gestionar.
 
 ## Accesibilidad
 
@@ -95,8 +101,8 @@ Los comentarios van junto al código que cumple cada punto y, cuando corresponde
 | UI-01 | Pantallas en SwiftUI | La pantalla inicial usa SwiftUI; faltan búsqueda y detalle. |
 | BUS-01 | Campo de texto para buscar | Pendiente. |
 | BUS-02 | Mostrar resultados en una lista | Pendiente. |
-| CAN-01 | Lógica asíncrona que respete la cancelación | Implementada y probada en Domain y Data. |
-| CAN-02 | Cancelar la búsqueda anterior y evitar resultados antiguos | Pendiente en Presentation. |
+| CAN-01 | Lógica asíncrona que respete la cancelación | Implementada y probada en Domain, Data e Interactor. |
+| CAN-02 | Cancelar la búsqueda anterior y evitar resultados antiguos | Interactor probado; falta conectar la cancelación de la tarea en la vista. |
 | DET-01 | Navegar al seleccionar un resultado | Pendiente. |
 | DET-02 | Mostrar al menos tres campos en el detalle | Pendiente; el modelo ya contiene los datos. |
 | CACHE-01 | Caché en memoria por query | Implementada. |
@@ -106,24 +112,23 @@ Los comentarios van junto al código que cumple cada punto y, cuando corresponde
 | CACHE-05 | Persistencia en disco (opcional) | No implementada; la caché en memoria cubre la prueba. |
 | TEST-01 | Tests de Domain con repositorios de prueba | Implementados. |
 | TEST-02 | Tests de Data sobre caché | Implementados. |
-| TEST-04 | Tests de Presentation (opcionales, valorados) | Presenter probado con XCTest; faltan los tests del Interactor. |
+| TEST-04 | Tests de Presentation (opcionales, valorados) | Presenter e Interactor probados con XCTest. |
 | ENT-01 | Repositorio con código y tests | Código y pruebas incluidos. |
 | DOC-01 | README con API, ejecución y decisiones | Se actualiza con cada tanda. |
-| ARQ-02 | VIP con Coordinator (petición propia) | Presenter implementado; Interactor, conexión de la vista y Coordinator pendientes. |
-| DIS-01 | SOLID e inyección de dependencias (petición propia) | Contratos e inyección en Domain y Data; se mantendrán en Presentation. |
+| ARQ-02 | VIP con Coordinator (petición propia) | Presenter e Interactor implementados; conexión de la vista y Coordinator pendientes. |
+| DIS-01 | SOLID e inyección de dependencias (petición propia) | Contratos en Domain y Data; Interactor recibe caso de uso y Presenter por inicializador. |
 | TEST-03 | Swift Testing y XCTest (petición propia) | Ambos frameworks incluidos. |
 | A11Y-01 | Accesibilidad y resumen al pie de cada vista (petición propia) | Resúmenes incluidos en la pantalla inicial; faltan las nuevas vistas y las comprobaciones. |
 | CI-01 | Jobs de tests y entrega a TestFlight (petición propia) | Pendiente. |
 | SWIFT-01 | Swift 6 (perfil) | Configurado en Debug y Release. |
 
-<!-- REQUISITO [TEST]: El Presenter tiene tests de XCTest; los del Interactor se añadirán en su tanda. -->
+<!-- REQUISITO [TEST]: Presenter e Interactor tienen tests de XCTest. -->
 <!-- PENDIENTE PROPIO [CI-01]: Marcar los jobs y su dependencia cuando se implemente el workflow. -->
 
 ## Lo siguiente
 
-1. Interactor de búsqueda: debounce, cancelación y control de respuestas antiguas, con tests de XCTest.
-2. Conectar la vista SwiftUI: campo de búsqueda, lista y estados de pantalla.
-3. Detalle y navegación con Coordinator.
-4. Jobs de GitHub para tests y entrega a TestFlight.
+1. Conectar la vista SwiftUI: campo de búsqueda, lista y estados de pantalla.
+2. Detalle y navegación con Coordinator.
+3. Jobs de GitHub para tests y entrega a TestFlight.
 
 Iremos actualizando este README con las decisiones y las instrucciones de cada tanda. El `.gitignore` deja fuera archivos locales de Xcode, compilaciones y credenciales.

@@ -25,21 +25,21 @@ actor AlbumSearchCache {
         removeExpiredEntries()
         return entries[query]?.albums
     }
+    
+    // REQUISITO [CACHE]: Una entrada caducada deja de ser un resultado válido.
+    private func removeExpiredEntries() {
+        let instant = now()
+        entries = entries.filter { $0.value.expiresAt > instant }
+    }
 
+    // REQUISITO [CANCELACION]: Respetar también la cancelación mientras se espera para entrar en el actor.
     func store(_ albums: [Album], for query: String) throws {
-        // REQUISITO [CANCELACION]: Respetar también la cancelación mientras se espera para entrar en el actor.
         try Task.checkCancellation()
         removeExpiredEntries()
         if entries[query] == nil {
             makeRoomIfNeeded()
         }
         entries[query] = Entry(albums: albums, expiresAt: now().advanced(by: lifetime))
-    }
-
-    // REQUISITO [CACHE]: Una entrada caducada deja de ser un resultado válido.
-    private func removeExpiredEntries() {
-        let instant = now()
-        entries = entries.filter { $0.value.expiresAt > instant }
     }
 
     private func makeRoomIfNeeded() {
