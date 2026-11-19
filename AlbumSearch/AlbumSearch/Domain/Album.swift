@@ -1,6 +1,6 @@
 import Foundation
 
-/// Datos del álbum que necesita la app, sin detalles del formato de la API.
+/// REQUISITO [ARQ]: El modelo de Domain no conoce el formato de la API ni la interfaz.
 struct Album: Identifiable, Equatable, Sendable {
     let id: Int
     let title: String

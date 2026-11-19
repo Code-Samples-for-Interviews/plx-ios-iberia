@@ -112,6 +112,10 @@
 				"F763F56C9B599E53DDF7448C",
 				"C2D8B2A8D79086EE851D2A35",
 				"2787E659602F96F129FA7C32",
+				"9FEF9D854666CBC2FEBDB6B3",
+				"4E3F45D6B38DDD4E810FFFA5",
+				"705E24B330269D07C51B5B4A",
+				"B891A23DF811A1001F9985D0",
 			);
 			"runOnlyForDeploymentPostprocessing" = "0";
 		};
@@ -141,6 +145,7 @@
 				"SWIFT_COMPILATION_MODE" = "wholemodule";
 				"IPHONEOS_DEPLOYMENT_TARGET" = "18.0";
 				"SDKROOT" = "iphoneos";
+				// REQUISITO DEL PERFIL [SWIFT-01]: Compilar en modo de lenguaje Swift 6.
 				"SWIFT_VERSION" = "6.0";
 				"SWIFT_STRICT_CONCURRENCY" = "complete";
 			};
@@ -160,6 +165,7 @@
 				"IPHONEOS_DEPLOYMENT_TARGET" = "18.0";
 				"CLANG_ENABLE_MODULES" = "YES";
 				"SWIFT_OPTIMIZATION_LEVEL" = "-Onone";
+				// REQUISITO DEL PERFIL [SWIFT-01]: Compilar en modo de lenguaje Swift 6.
 				"SWIFT_VERSION" = "6.0";
 				"SDKROOT" = "iphoneos";
 				"SWIFT_STRICT_CONCURRENCY" = "complete";
@@ -250,6 +256,10 @@
 			"path" = "Data";
 			"sourceTree" = "<group>";
 			"children" = (
+				"5CDC92DA5DB0A0DF917F262D",
+				"C337B09E7E56D5B60194ACBD",
+				"72A4227423CF6C9DFB87C94B",
+				"93DA6A18000C6C07582F6157",
 			);
 		};
 		"04BF213D69549D4D44D15B89" = {
@@ -326,6 +336,7 @@
 			"sourceTree" = "<group>";
 			"children" = (
 				"D1ED1DC08B1999728A652D21",
+				"B93C892BC6638E7EC1567736",
 			);
 		};
 		"89054CF755383A4E6AE32C32" = {
@@ -339,6 +350,9 @@
 			"buildActionMask" = "2147483647";
 			"files" = (
 				"F45C50EAC08CB37924E57567",
+				"5BB0016DABD96AE0CBA77C8C",
+				"8A4D4BC6A59FC2BDF36A23B9",
+				"AE6EE188EB1FF0267105DABC",
 			);
 			"runOnlyForDeploymentPostprocessing" = "0";
 		};
@@ -424,6 +438,86 @@
 			);
 			"buildRules" = (
 			);
+		};
+		"5CDC92DA5DB0A0DF917F262D" = {
+			"isa" = "PBXFileReference";
+			"path" = "HTTPClient.swift";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "<group>";
+		};
+		"9FEF9D854666CBC2FEBDB6B3" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "5CDC92DA5DB0A0DF917F262D";
+		};
+		"C337B09E7E56D5B60194ACBD" = {
+			"isa" = "PBXFileReference";
+			"path" = "ITunesSearchResponse.swift";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "<group>";
+		};
+		"4E3F45D6B38DDD4E810FFFA5" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "C337B09E7E56D5B60194ACBD";
+		};
+		"72A4227423CF6C9DFB87C94B" = {
+			"isa" = "PBXFileReference";
+			"path" = "ITunesAlbumRepository.swift";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "<group>";
+		};
+		"705E24B330269D07C51B5B4A" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "72A4227423CF6C9DFB87C94B";
+		};
+		"D6E26C33A1317D254BCC2D2B" = {
+			"isa" = "PBXFileReference";
+			"path" = "ITunesAlbumRepositoryTests.swift";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "<group>";
+		};
+		"5BB0016DABD96AE0CBA77C8C" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "D6E26C33A1317D254BCC2D2B";
+		};
+		"B93C892BC6638E7EC1567736" = {
+			"isa" = "PBXGroup";
+			"path" = "Data";
+			"sourceTree" = "<group>";
+			"children" = (
+				"D6E26C33A1317D254BCC2D2B",
+				"CB39C7D2713313339D5DF099",
+				"8CFCF4BF2EF396B30E191056",
+			);
+		};
+		"93DA6A18000C6C07582F6157" = {
+			"isa" = "PBXFileReference";
+			"path" = "AlbumSearchCache.swift";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "<group>";
+		};
+		"B891A23DF811A1001F9985D0" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "93DA6A18000C6C07582F6157";
+		};
+		"CB39C7D2713313339D5DF099" = {
+			"isa" = "PBXFileReference";
+			"path" = "AlbumSearchCacheTests.swift";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "<group>";
+		};
+		"8A4D4BC6A59FC2BDF36A23B9" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "CB39C7D2713313339D5DF099";
+		};
+		"8CFCF4BF2EF396B30E191056" = {
+			"isa" = "PBXFileReference";
+			"path" = "ManualClock.swift";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "<group>";
+		};
+		"AE6EE188EB1FF0267105DABC" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "8CFCF4BF2EF396B30E191056";
 		};
 	};
 	"rootObject" = "98F54143AB4E86B28C3AFEE0";

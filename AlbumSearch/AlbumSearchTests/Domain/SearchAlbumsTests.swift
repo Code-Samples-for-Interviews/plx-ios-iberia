@@ -2,6 +2,7 @@ import Foundation
 import Testing
 @testable import AlbumSearch
 
+// REQUISITO [TEST]: Tests unitarios de Domain con repositorios de prueba.
 @Suite("Búsqueda de álbumes")
 struct SearchAlbumsTests {
     @Test("Una búsqueda vacía no consulta el repositorio", arguments: ["", "   ", "\n\t"])
@@ -38,6 +39,7 @@ struct SearchAlbumsTests {
         }
     }
 
+    // REQUISITO [CANCELACION]: Comprobar que una tarea cancelada no llega al repositorio.
     @Test("Una tarea ya cancelada no consulta el repositorio")
     @MainActor
     func cancellationBeforeSearchSkipsRepository() async {
@@ -53,6 +55,7 @@ struct SearchAlbumsTests {
         #expect(await repository.queries.isEmpty)
     }
 
+    // REQUISITO [CANCELACION]: Comprobar cancelación aunque el repositorio termine la operación.
     @Test("Descarta resultados si se cancela durante la consulta")
     func cancellationAfterRequestRejectsResults() async {
         let repository = ControlledRepository()
