@@ -1,4 +1,4 @@
-name: Tests iOS
+name: CI iOS
 
 on:
   pull_request:
@@ -9,10 +9,10 @@ on:
 permissions:
   contents: read
 
-# Una nueva revisión cancela la ejecución anterior de la misma PR o rama.
+# Cancelamos revisiones antiguas de una PR, pero no interrumpimos una entrega en main.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   # Ejecutar Swift Testing y XCTest en GitHub Actions.
@@ -22,7 +22,7 @@ jobs:
     timeout-minutes: 20
     env:
       # Xcode y destino explícitos para poder reproducir el entorno.
-      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
     steps:
       - name: Descargar el código
         uses: actions/checkout@v6
@@ -38,7 +38,7 @@ jobs:
             -project AlbumSearch/AlbumSearch.xcodeproj \
             -scheme AlbumSearch \
             -configuration Debug \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.5' \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=26.2' \
             -resultBundlePath "$RUNNER_TEMP/TestResults.xcresult" \
             CODE_SIGNING_ALLOWED=NO
 
@@ -50,3 +50,31 @@ jobs:
           path: ${{ runner.temp }}/TestResults.xcresult
           retention-days: 7
           if-no-files-found: warn
+
+  # Entregar a TestFlight solo después de pasar los tests.
+  delivery:
+    name: Entrega a TestFlight
+    needs: tests
+    if: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.TESTFLIGHT_ENABLED == 'true' }}
+    runs-on: macos-15
+    timeout-minutes: 30
+    environment: testflight
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+    steps:
+      - name: Descargar el código probado
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Archivar y subir a App Store Connect
+        env:
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          APP_BUNDLE_ID: ${{ vars.APP_BUNDLE_ID }}
+          ASC_KEY_ID: ${{ vars.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ vars.ASC_ISSUER_ID }}
+          IOS_CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
+          IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          IOS_PROFILE_BASE64: ${{ secrets.IOS_PROFILE_BASE64 }}
+          ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+        run: bash scripts/deliver-testflight.sh

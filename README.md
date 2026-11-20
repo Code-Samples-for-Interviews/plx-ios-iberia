@@ -66,11 +66,11 @@ Comprobamos búsquedas vacías, normalización, resultados, errores y cancelaci�
 
 <!-- REQUISITO PROPIO [CI]: Job de tests en GitHub Actions con Swift Testing y XCTest. -->
 
-El workflow `.github/workflows/tests.yml` ejecuta el job **Tests iOS** al abrir o actualizar una pull request y al subir cambios a `main`. También podemos lanzarlo desde **Actions → Tests iOS → Run workflow**, cuando el archivo esté en la rama principal.
+El workflow `.github/workflows/tests.yml` ejecuta el job **Tests iOS** al abrir o actualizar una pull request y al subir cambios a `main`. También podemos lanzarlo desde **Actions → CI iOS → Run workflow**, cuando el archivo esté en la rama principal.
 
 Usamos `xcodebuild test` con el esquema compartido AlbumSearch. Ese comando compila la app y ejecuta los tests de Swift Testing y XCTest. Si falla la compilación o alguna prueba, el job falla. No necesita certificados ni secretos porque corre en simulador.
 
-El entorno es `macos-15`, Xcode 16.4 y un iPhone 16 con iOS 18.5. Fijamos Xcode y el destino en lugar de depender de la versión predeterminada del runner. Ambos están disponibles en la [imagen de GitHub](https://github.com/actions/runner-images/blob/main/images/macos/macos-15-arm64-Readme.md); habrá que revisar esos valores cuando se actualice el entorno. Esta configuración es para tests; la entrega tendrá su propia configuración.
+El entorno es `macos-15`, Xcode 26.3 y un iPhone 16 con iOS 26.2. Fijamos Xcode y el destino en lugar de depender de la versión predeterminada del runner. Ambos están disponibles en la [imagen de GitHub](https://github.com/actions/runner-images/blob/main/images/macos/macos-15-arm64-Readme.md); habrá que revisar esos valores cuando se actualice el entorno. Usamos la misma versión de Xcode para tests y entrega. Para subir builds, [Apple exige Xcode 26 o superior](https://developer.apple.com/news/upcoming-requirements/?id=04282026a); esto no cambia el mínimo de iOS 18 de la app.
 
 Para repetir las pruebas desde la raíz del repositorio:
 
@@ -79,15 +79,53 @@ xcodebuild test \
   -project AlbumSearch/AlbumSearch.xcodeproj \
   -scheme AlbumSearch \
   -configuration Debug \
-  -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.5' \
+  -destination 'platform=iOS Simulator,name=iPhone 16,OS=26.2' \
   CODE_SIGNING_ALLOWED=NO
 ```
 
 En local hay que tener ese simulador instalado o cambiar el destino por uno disponible. Podemos verlos con `xcodebuild -showdestinations -project AlbumSearch/AlbumSearch.xcodeproj -scheme AlbumSearch`.
 
-Guardamos el `.xcresult` durante siete días como artefacto **resultados-tests-ios**, también si falla alguna prueba. Se descarga desde la ejecución en Actions y se abre con Xcode para revisar los fallos y la cobertura. Si la compilación falla antes de generarlo, el diagnóstico estará en el log del job. Una nueva revisión cancela la ejecución anterior de la misma PR o rama.
+Guardamos el `.xcresult` durante siete días como artefacto **resultados-tests-ios**, también si falla alguna prueba. Se descarga desde la ejecución en Actions y se abre con Xcode para revisar los fallos y la cobertura. Si la compilación falla antes de generarlo, el diagnóstico estará en el log del job. Una nueva revisión cancela la ejecución anterior de la misma PR. En `main` no interrumpimos una entrega en curso.
 
 El job está preparado y su configuración se ha validado en local. Falta comprobar su primera ejecución real en GitHub después de subir este commit. Para exigirlo antes de integrar una PR, hay que configurar **Tests iOS** como comprobación obligatoria en las reglas de la rama; el archivo por sí solo no bloquea una integración.
+
+## Entrega a TestFlight
+
+<!-- REQUISITO PROPIO [CI]: Job de entrega dependiente de los tests. -->
+
+El job **Entrega a TestFlight** depende de `tests` mediante `needs`. Se ejecuta en `main`, después de pasar las pruebas, al subir cambios o lanzar el workflow manualmente. En las PRs solo se ejecutan los tests. Mientras la variable del repositorio `TESTFLIGHT_ENABLED` no sea `true`, la entrega se omite y los tests siguen funcionando.
+
+El script `scripts/deliver-testflight.sh` prepara la firma, archiva en Release y sube el archivo con `xcodebuild -exportArchive`. Usamos **firma manual** con un certificado Apple Distribution y un perfil de App Store Connect. Así quedan claras las credenciales necesarias. El proyecto conserva la firma automática para trabajar en Xcode; el script la cambia solo para esa compilación. No añadimos Fastlane ni otra herramienta de distribución.
+
+### Qué hay que configurar
+
+1. Tener una cuenta activa del Apple Developer Program, registrar un Bundle ID propio y crear la app en App Store Connect con ese mismo identificador. El `com.example.AlbumSearch` del proyecto es de ejemplo; el job lo sustituye con `APP_BUNDLE_ID`.
+2. Añadir un icono válido en `AppIcon.appiconset` y seleccionarlo como App Icon del target. **Todavía no está incluido**: el script lo comprueba antes de tocar la firma. Hay que completar también los datos de la app y las preguntas de cifrado que solicite Apple.
+3. Exportar el certificado **Apple Distribution con su clave privada** como `.p12` protegido con contraseña. Crear y descargar un perfil **App Store Connect** para ese certificado, equipo y Bundle ID; no sirve uno de desarrollo ni Ad Hoc.
+4. Crear una clave de equipo de App Store Connect con permisos para subir builds (por ejemplo, App Manager). Guardar su `.p8`, Key ID e Issuer ID. Se usa para autenticar la subida, no sustituye al certificado de firma.
+5. En GitHub, crear el environment `testflight`, limitado a `main`, y añadir estas variables y secretos. Crear `TESTFLIGHT_ENABLED` a nivel de **repositorio**, porque decide si el job llega a ejecutarse.
+
+| Tipo | Nombre | Contenido |
+| --- | --- | --- |
+| Variable del repositorio | `TESTFLIGHT_ENABLED` | `true` cuando esté todo preparado; inicialmente ausente. |
+| Variable de `testflight` | `APPLE_TEAM_ID` | Identificador del equipo de Apple Developer. |
+| Variable de `testflight` | `APP_BUNDLE_ID` | Bundle ID registrado para la app. |
+| Variable de `testflight` | `ASC_KEY_ID` | Key ID de la clave de App Store Connect. |
+| Variable de `testflight` | `ASC_ISSUER_ID` | Issuer ID de esa clave de equipo. |
+| Secreto de `testflight` | `IOS_CERTIFICATE_BASE64` | Contenido del `.p12` codificado en Base64. |
+| Secreto de `testflight` | `IOS_CERTIFICATE_PASSWORD` | Contraseña del `.p12`. |
+| Secreto de `testflight` | `IOS_PROFILE_BASE64` | Contenido del `.mobileprovision` codificado en Base64. |
+| Secreto de `testflight` | `ASC_PRIVATE_KEY` | Contenido completo del `.p8`, con encabezado, pie y saltos de línea; sin Base64. |
+
+En macOS podemos copiar cada archivo codificado con `base64 -i certificado.p12 | pbcopy` y `base64 -i perfil.mobileprovision | pbcopy`. Para la clave usamos `pbcopy < AuthKey.p8`. Se pegan en los secretos de GitHub; no van en el repositorio ni en el README. La instalación de la firma sigue el [procedimiento de GitHub para runners de macOS](https://docs.github.com/en/actions/how-tos/deploy/deploy-to-third-party-platforms/sign-xcode-applications).
+
+El script crea un llavero temporal y elimina el certificado, el perfil y la clave al terminar, también si falla. Está pensado para runners efímeros de GitHub, no para ejecutarlo en el Mac de trabajo ni en un runner compartido. Si caduca el certificado o el perfil, hay que renovar los secretos correspondientes.
+
+El número de build usa `GITHUB_RUN_NUMBER.GITHUB_RUN_ATTEMPT`, por ejemplo `12.1`; un reintento del mismo run pasa a `12.2`. La versión comercial sigue siendo la del proyecto. Si ya existen builds subidos por otro proceso, hay que comprobar que el número siguiente sea mayor para esa versión y evitar relanzar runs antiguos.
+
+La subida termina cuando Apple acepta el envío. El procesamiento, las preguntas de cumplimiento, la asignación a grupos y una posible revisión para testers externos se consultan en App Store Connect. No publicamos la app en la App Store. Apple explica ese paso en [cómo subir builds](https://developer.apple.com/help/app-store-connect/manage-builds/upload-builds).
+
+**Estado actual:** workflow y script preparados; validación local de configuración y flujo con comandos simulados. La firma y la subida reales siguen pendientes de icono, cuenta, credenciales y primera ejecución en GitHub. No damos por completado un deploy que todavía no hemos hecho.
 
 ## Presentación y navegación
 
@@ -154,15 +192,15 @@ Los comentarios van junto al código que cumple cada punto y, cuando corresponde
 | DIS-01 | SOLID e inyección de dependencias (petición propia) | Contratos en Domain y Data; Interactor recibe caso de uso y Presenter por inicializador. |
 | TEST-03 | Swift Testing y XCTest (petición propia) | Ambos frameworks incluidos. |
 | A11Y-01 | Accesibilidad y resumen al pie de cada vista (petición propia) | Medidas y resúmenes incluidos; auditoría completa pendiente. |
-| CI-01 | Jobs de tests y entrega a TestFlight (petición propia) | Job de tests preparado; primera ejecución en GitHub y entrega pendientes. |
+| CI-01 | Jobs de tests y entrega a TestFlight (petición propia) | Jobs de tests y entrega preparados; firma y ejecución reales pendientes de configuración. |
 | SWIFT-01 | Swift 6 (perfil) | Configurado en Debug y Release. |
 
 <!-- REQUISITO [TEST]: Presenter, Interactor y Coordinator tienen tests de XCTest. -->
-<!-- PENDIENTE PROPIO [CI]: Añadir el job de entrega y su dependencia de los tests. -->
+<!-- PENDIENTE PROPIO [CI]: Configurar firma, icono y comprobar el flujo real en GitHub. -->
 
 ## Lo siguiente
 
 1. Comprobar el job de tests en GitHub.
-2. Añadir el job de entrega a TestFlight, después de los tests.
+2. Añadir el icono y configurar la firma para comprobar la entrega real a TestFlight.
 
 Iremos actualizando este README con las decisiones y las instrucciones de cada tanda. El `.gitignore` deja fuera archivos locales de Xcode, compilaciones y credenciales.
