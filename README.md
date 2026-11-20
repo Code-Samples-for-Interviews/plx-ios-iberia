@@ -4,11 +4,11 @@
 
 Prueba técnica de iOS para buscar álbumes en iTunes y consultar su detalle.
 
-La idea es hacerlo sencillo, separar bien las responsabilidades y explicar las decisiones según vayamos avanzando. Vamos por partes, con cambios pequeños que se puedan revisar y defender.
+La idea es hacerlo sencillo, separar bien las responsabilidades.
 
 ## Qué hay ahora
 
-La búsqueda ya está conectada: escribimos un artista o un álbum y vemos los resultados de iTunes en una lista. Se muestran los estados de carga, lista vacía y error, con opción de reintentar. Al seleccionar un resultado abrimos su detalle. El Coordinator mantiene el estado de navegación.
+La búsqueda ya está conectada: escribimos un artista o un álbum y vemos los resultados de iTunes en una lista. Se muestran los estados de carga, lista vacía y error, con opción de reintentar. Al seleccionar un resultado abrimos su detalle.
 
 ## Cómo arrancarlo
 
@@ -42,52 +42,61 @@ Presentation/
 
 Así se ve el VIP de búsqueda junto y el Coordinator queda fácil de localizar. El detalle solo muestra datos recibidos, por eso no tiene Interactor ni Presenter propios. Los tests de Presentation siguen la misma distribución: Search y Navigation, sin carpetas vacías.
 
-No vamos a modularizar de entrada. Para el tamaño de esta prueba, las carpetas son suficientes. Si más adelante tiene sentido extraer un módulo, lo haremos. Mientras tanto, cuidaremos las dependencias mediante protocolos e inyección por inicializador.
+No vamos a modularizar de entrada. Para el tamaño de esta prueba, las carpetas son suficientes. No tiene sentido extraer un módulo. Se cuidan las dependencias mediante protocolos e inyección por inicializador.
 
 ## Búsqueda: Domain
 
 - **Album:** los datos que necesitamos para el listado y el detalle: identificador, título, artista, género, número de pistas y fecha de lanzamiento. La fecha puede no estar disponible.
-- **AlbumRepository:** el contrato de búsqueda. Es asíncrono, puede devolver errores y debe respetar la cancelación. La implementación con iTunes está en Data.
+- **AlbumRepository:** La búsqueda es asíncrona, puede devolver errores y debe respetar la cancelación. La implementación con iTunes está en Data.
 - **SearchAlbums:** recibe el texto, quita espacios y saltos de línea de los extremos y lo pasa a minúsculas. Si queda vacío, devuelve una lista vacía sin consultar el repositorio.
 
 La normalización vive en el caso de uso para que la interfaz y la caché utilicen la misma query. No cambiamos los espacios interiores ni los acentos.
 
-Comprobamos la cancelación antes y después de consultar el repositorio. Así tampoco devolvemos resultados si una implementación termina la consulta sin atender la cancelación. El Interactor añade el debounce y descarta respuestas antiguas; la vista lo ejecuta dentro de su tarea de búsqueda.
+Comprobamos la cancelación antes y después de consultar el repositorio. Así tampoco devolvemos resultados si una implementación termina la consulta sin atender la cancelación. El Interactor añade el debounce y descarta respuestas antiguas. La vista lo ejecuta dentro de su tarea de búsqueda.
 
 ## Datos: iTunes y caché
 
 Usamos la [API pública de iTunes](https://performance-partners.apple.com/search-api). No necesita claves. Buscamos álbumes en la tienda española, con un máximo de 30 resultados por petición. La API también puede devolver singles y EPs.
 
-- **HTTPClient:** el contrato de transporte permite probar Data sin usar la red. La implementación real usa URLSession, HTTPS y un timeout de petición de 15 segundos.
+- **HTTPClient:** se permite probar Data sin usar la red. La implementación real usa URLSession, HTTPS y un timeout de petición de 15 segundos.
 - **ITunesSearchResponse:** adapta el JSON al modelo Album. Los nombres del servicio no salen de Data. Si faltan los campos opcionales, el género indica que no está disponible, el número de pistas queda en 0 y la fecha en nil. El detalle muestra ese 0 y la fecha ausente como datos no disponibles.
 - **ITunesAlbumRepository:** implementa el contrato de Domain. Su búsqueda solo coordina tres pasos: consultar la caché, pedir datos si hacen falta y guardarlos. La petición HTTP y la decodificación están separadas en métodos propios.
-- **AlbumSearchCache:** guarda los resultados y se encarga de su caducidad y del límite de entradas. Es un actor para proteger ese estado; el repositorio no necesita serlo porque no tiene estado mutable propio.
+- **AlbumSearchCache:** guarda los resultados y se encarga de su caducidad y del límite de entradas. Es un actor para proteger ese estado. El repositorio no necesita serlo porque no tiene estado mutable propio.
 
-El enunciado pide que los resultados duren un tiempo limitado en caché, por ejemplo entre dos y cinco minutos. Hemos elegido **tres minutos**, configurables al crear AlbumSearchCache. No es una restricción de iTunes: sirve para evitar consultas repetidas sin conservar los datos indefinidamente.
+El enunciado pide que los resultados duren un tiempo limitado en caché, por ejemplo entre dos y cinco minutos. Se ha elegido **tres minutos**, configurables al crear AlbumSearchCache. No es una restricción de iTunes, sirve para evitar consultas repetidas sin conservar los datos indefinidamente.
 
-Por ejemplo, si buscamos «queen» otra vez antes de esos tres minutos, reutilizamos el resultado. Después, volvemos a pedirlo. El plazo empieza al guardar los datos, no al iniciar la petición. Si sigue vigente, devolvemos el resultado sin llamar al cliente HTTP; al caducar, consultamos la red y reemplazamos la entrada. Las listas vacías también se guardan. Los errores y las respuestas canceladas no se guardan.
+Por ejemplo, si buscamos «queen» otra vez antes de esos tres minutos, reutilizamos el resultado. Después, volvemos a pedirlo. El plazo empieza al guardar los datos, no al iniciar la petición. Si sigue vigente, devolvemos el resultado sin llamar al cliente HTTP. al caducar, consultamos la red y reemplazamos la entrada. Las listas vacías también se guardan. Los errores y las respuestas canceladas no se guardan.
 
-Usamos un reloj monotónico para que un cambio en la hora del dispositivo no afecte a la vigencia. En los tests adelantamos ese reloj sin esperar tres minutos. Las entradas caducadas se limpian al consultar y después de recibir una respuesta; no hay un temporizador de limpieza.
+Usamos un control interno de horarios (reloj monotónico) para que un cambio en la hora del dispositivo no afecte a la vigencia. En los tests adelantamos ese reloj sin esperar tres minutos. Las entradas caducadas se limpian al consultar y después de recibir una respuesta. No hay un temporizador de limpieza.
 
-Limitamos la caché a 50 queries. Si se llena, eliminamos la entrada con el vencimiento más próximo. Es un límite sencillo para no acumular búsquedas indefinidamente; no es una política LRU. La sesión no usa URLCache, así mantenemos una sola política de caché.
+Limitamos la caché a 50 queries. Si se llena, eliminamos la entrada con el vencimiento más próximo. Es un límite sencillo para no acumular búsquedas indefinidamente. La sesión no usa URLCache, así mantenemos una sola política de caché.
 
 Por ahora no hay persistencia en disco, datos caducados como alternativa sin conexión ni peticiones compartidas: dos consultas simultáneas sin caché pueden hacer dos llamadas. El actor de la caché protege sus lecturas y escrituras; no gestiona las peticiones de red ni deduplica búsquedas.
 
 ## Tests
 
-En Xcode, seleccionamos el esquema **AlbumSearch** y ejecutamos **Product → Test** o **⌘U**. El target **AlbumSearchTests** usa Swift Testing para Domain y Data, y XCTest para Presenter, Interactor y Coordinator. Ninguno de estos tests hace llamadas de red.
+En Xcode, seleccionamos el esquema **AlbumSearch** y ejecutamos **Product → Test** o **⌘U**. El target **AlbumSearchTests** usa Swift Testing para Domain y Data, y XCTest para Presenter, Interactor y Coordinator. Se ha hecho así a propósito para cubrir ambas librerías de test. Ninguno de estos tests hace llamadas de red.
 
-Comprobamos búsquedas vacías, normalización, resultados, errores y cancelación antes y durante la consulta. Usamos repositorios de prueba y controlamos cuándo termina una petición; no hay que esperar a la red ni usar pausas para reproducir la cancelación. En Data también comprobamos la petición, el mapeo, el uso y la expiración de la caché, sus límites y que no guarde errores o respuestas canceladas. La caché tiene además sus propias pruebas de capacidad y cancelación al leer o guardar. Los tests del Presenter comprueban los estados de resultados, lista vacía, carga, reinicio y mensajes de error. Los del Interactor fuerzan respuestas fuera de orden, errores antiguos, limpieza del texto, cancelación y reintento. Los del Coordinator comprueban el álbum que se abre y que solo haya un nivel de detalle.
+Aunque se hacen test manuales, la entrada de la IA hace mucho mas cómodo realizar pruebas sobre el código mucho mas rápido. Ayuda a eliminar el factor de auto-comprobación de desarrollo.
+
+Se realizan pruebas de búsquedas vacías, normalización, resultados, errores y cancelación antes y durante la consulta. Usamos repositorios de prueba y controlamos cuándo termina una petición. No hay que esperar a la red ni usar pausas para reproducir la cancelación. 
+
+En Data también comprobamos la petición, el mapeo, el uso y la expiración de la caché, sus límites y que no guarde errores o respuestas canceladas. La caché tiene además sus propias pruebas de capacidad y cancelación al leer o guardar. 
+
+Los tests del Presenter comprueban los estados de resultados, lista vacía, carga, reinicio y mensajes de error. Los del Interactor fuerzan respuestas fuera de orden, errores antiguos, limpieza del texto, cancelación y reintento. 
+
+Los del Coordinator comprueban el álbum que se abre y que solo haya un nivel de detalle.
 
 ## Integración continua
 
-<!-- REQUISITO PROPIO [CI]: Job de tests en GitHub Actions con Swift Testing y XCTest. -->
+<!-- Job de tests en GitHub Actions con Swift Testing y XCTest. -->
+Para el flujo CI/CD se han generado las automatizaciones de control de test y subida a TestFlight en caso de que todos los tests sean exitosos.
 
 El workflow `.github/workflows/tests.yml` ejecuta el job **Tests iOS** al abrir o actualizar una pull request y al subir cambios a `main`. También podemos lanzarlo desde **Actions → CI iOS → Run workflow**, cuando el archivo esté en la rama principal.
 
 Usamos `xcodebuild test` con el esquema compartido AlbumSearch. Ese comando compila la app y ejecuta los tests de Swift Testing y XCTest. Si falla la compilación o alguna prueba, el job falla. No necesita certificados ni secretos porque corre en simulador.
 
-El entorno es `macos-15`, Xcode 26.3 y un iPhone 16 con iOS 26.2. Fijamos Xcode y el destino en lugar de depender de la versión predeterminada del runner. Ambos están disponibles en la [imagen de GitHub](https://github.com/actions/runner-images/blob/main/images/macos/macos-15-arm64-Readme.md); habrá que revisar esos valores cuando se actualice el entorno. Usamos la misma versión de Xcode para tests y entrega. Para subir builds, [Apple exige Xcode 26 o superior](https://developer.apple.com/news/upcoming-requirements/?id=04282026a); esto no cambia el mínimo de iOS 18 de la app.
+El entorno es `macos-15`, Xcode 26.3 y un iPhone 16 con iOS 26.2. Fijamos Xcode y el destino en lugar de depender de la versión predeterminada del runner. Ambos están disponibles en la [imagen de GitHub](https://github.com/actions/runner-images/blob/main/images/macos/macos-15-arm64-Readme.md). Habrá que revisar esos valores cuando se actualice el entorno. Usamos la misma versión de Xcode para tests y entrega. Para subir builds, [Apple exige Xcode 26 o superior](https://developer.apple.com/news/upcoming-requirements/?id=04282026a). Esto no cambia el mínimo de iOS 18 de la app.
 
 Para repetir las pruebas desde la raíz del repositorio:
 
@@ -112,12 +121,12 @@ El job está preparado y su configuración se ha validado en local. Falta compro
 
 El job **Entrega a TestFlight** depende de `tests` mediante `needs`. Se ejecuta en `main`, después de pasar las pruebas, al subir cambios o lanzar el workflow manualmente. En las PRs solo se ejecutan los tests. Mientras la variable del repositorio `TESTFLIGHT_ENABLED` no sea `true`, la entrega se omite y los tests siguen funcionando.
 
-El script `scripts/deliver-testflight.sh` prepara la firma, archiva en Release y sube el archivo con `xcodebuild -exportArchive`. Usamos **firma manual** con un certificado Apple Distribution y un perfil de App Store Connect. Así quedan claras las credenciales necesarias. El proyecto conserva la firma automática para trabajar en Xcode; el script la cambia solo para esa compilación. No añadimos Fastlane ni otra herramienta de distribución.
+El script `scripts/deliver-testflight.sh` prepara la firma, archiva en Release y sube el archivo con `xcodebuild -exportArchive`. Usamos **firma manual** con un certificado Apple Distribution y un perfil de App Store Connect. Así quedan claras las credenciales necesarias. El proyecto conserva la firma automática para trabajar en Xcode. El script la cambia solo para esa compilación. No añadimos Fastlane ni otra herramienta de distribución.
 
 ### Qué hay que configurar
 
-1. Tener una cuenta activa del Apple Developer Program, registrar un Bundle ID propio y crear la app en App Store Connect con ese mismo identificador. El `com.example.AlbumSearch` del proyecto es de ejemplo; el job lo sustituye con `APP_BUNDLE_ID`.
-2. Revisar los datos de la app en App Store Connect. El icono ya está incluido y seleccionado en el target. La declaración de cifrado se explica más abajo; hay que revisarla si se añaden librerías o cambia el uso de cifrado.
+1. Tener una cuenta activa del Apple Developer Program, registrar un Bundle ID propio y crear la app en App Store Connect con ese mismo identificador. El `com.example.AlbumSearch` del proyecto es de ejemplo. El job lo sustituye con `APP_BUNDLE_ID`.
+2. Revisar los datos de la app en App Store Connect. El icono ya está incluido y seleccionado en el target. La declaración de cifrado se explica más abajo. Hay que revisarla si se añaden librerías o cambia el uso de cifrado.
 3. Exportar el certificado **Apple Distribution con su clave privada** como `.p12` protegido con contraseña. Crear y descargar un perfil **App Store Connect** para ese certificado, equipo y Bundle ID; no sirve uno de desarrollo ni Ad Hoc.
 4. Crear una clave de equipo de App Store Connect con permisos para subir builds (por ejemplo, App Manager). Guardar su `.p8`, Key ID e Issuer ID. Se usa para autenticar la subida, no sustituye al certificado de firma.
 5. En GitHub, crear el environment `testflight`, limitado a `main`, y añadir estas variables y secretos. Crear `TESTFLIGHT_ENABLED` a nivel de **repositorio**, porque decide si el job llega a ejecutarse.
@@ -152,7 +161,7 @@ El número de build usa `GITHUB_RUN_NUMBER.GITHUB_RUN_ATTEMPT`, por ejemplo `12.
 
 La subida termina cuando Apple acepta el envío. El procesamiento, las preguntas de cumplimiento, la asignación a grupos y una posible revisión para testers externos se consultan en App Store Connect. No publicamos la app en la App Store. Apple explica ese paso en [cómo subir builds](https://developer.apple.com/help/app-store-connect/manage-builds/upload-builds).
 
-**Estado actual:** workflow y script preparados; validación local de configuración y flujo con comandos simulados. La firma y la subida reales siguen pendientes de cuenta, credenciales y primera ejecución en GitHub. No damos por completado un deploy que todavía no hemos hecho.
+**Estado actual:** workflow y script preparados. Validación local de configuración y flujo con comandos simulados. La firma y la subida reales siguen pendientes de cuenta, credenciales y primera ejecución en GitHub. No damos por completado un deploy que todavía no hemos hecho.
 
 ## Presentación y navegación
 
@@ -196,39 +205,39 @@ Los comentarios van junto al código que cumple cada punto y, cuando corresponde
 
 | Referencia | Qué pide | Estado actual |
 | --- | --- | --- |
-| ARQ-01 | Separar Data, Domain y Presentation | Capas organizadas en carpetas dentro del mismo target. |
-| API-01 | Consumir una API pública | Búsqueda de iTunes conectada con la pantalla. |
-| UI-01 | Pantallas en SwiftUI | Búsqueda, detalle y contenedor de navegación en SwiftUI. |
-| BUS-01 | Campo de texto para buscar | Implementado con searchable. |
-| BUS-02 | Mostrar resultados en una lista | Implementado con List y ForEach. |
-| CAN-01 | Lógica asíncrona que respete la cancelación | Implementada y probada en Domain, Data e Interactor. |
-| CAN-02 | Cancelar la búsqueda anterior y evitar resultados antiguos | Tarea de SwiftUI conectada con el identificador de cada intento; comprobaciones en Interactor. |
-| DET-01 | Navegar al seleccionar un resultado | Implementado con Coordinator y NavigationStack. |
-| DET-02 | Mostrar al menos tres campos en el detalle | Título, artista, género, pistas y fecha. |
-| CACHE-01 | Caché en memoria por query | Implementada. |
-| CACHE-02 | Vigencia limitada | Implementada; tres minutos es nuestra elección. |
-| CACHE-03 | Caché válida sin llamada de red | Implementado y probado. |
-| CACHE-04 | Renovar desde red cuando caduque | Implementado y probado. |
-| CACHE-05 | Persistencia en disco (opcional) | No implementada; la caché en memoria cubre la prueba. |
-| TEST-01 | Tests de Domain con repositorios de prueba | Implementados. |
-| TEST-02 | Tests de Data sobre caché | Implementados. |
-| TEST-04 | Tests de Presentation (opcionales, valorados) | Presenter, Interactor y Coordinator probados con XCTest. |
-| ENT-01 | Repositorio con código y tests | Código y pruebas incluidos. |
-| DOC-01 | README con API, ejecución y decisiones | Se actualiza con cada tanda. |
-| ARQ-02 | VIP con Coordinator (petición propia) | VIP y Coordinator conectados. |
-| DIS-01 | SOLID e inyección de dependencias (petición propia) | Contratos en Domain y Data; Interactor recibe caso de uso y Presenter por inicializador. |
-| TEST-03 | Swift Testing y XCTest (petición propia) | Ambos frameworks incluidos. |
-| A11Y-01 | Accesibilidad y resumen al pie de cada vista (petición propia) | Medidas y resúmenes incluidos; auditoría completa pendiente. |
-| CI-01 | Jobs de tests y entrega a TestFlight (petición propia) | Jobs de tests y entrega preparados; firma y ejecución reales pendientes de configuración. |
-| SWIFT-01 | Swift 6 (perfil) | Configurado en Debug y Release. |
+| ARQ | Separar Data, Domain y Presentation | Capas organizadas en carpetas dentro del mismo target. |
+| API | Consumir una API pública | Búsqueda de iTunes conectada con la pantalla. |
+| UI | Pantallas en SwiftUI | Búsqueda, detalle y contenedor de navegación en SwiftUI. |
+| BUS | Campo de texto para buscar | Implementado con searchable. |
+| BUS | Mostrar resultados en una lista | Implementado con List y ForEach. |
+| CANCELACION | Lógica asíncrona que respete la cancelación | Implementada y probada en Domain, Data e Interactor. |
+| CANCELACION | Cancelar la búsqueda anterior y evitar resultados antiguos | Tarea de SwiftUI conectada con el identificador de cada intento; comprobaciones en Interactor. |
+| DET | Navegar al seleccionar un resultado | Implementado con Coordinator y NavigationStack. |
+| DET | Mostrar al menos tres campos en el detalle | Título, artista, género, pistas y fecha. |
+| CACHE | Caché en memoria por query | Implementada. |
+| CACHE | Vigencia limitada | Implementada; tres minutos es nuestra elección. |
+| CACHE | Caché válida sin llamada de red | Implementado y probado. |
+| CACHE | Renovar desde red cuando caduque | Implementado y probado. |
+| CACHE | Persistencia en disco (opcional) | No implementada; la caché en memoria cubre la prueba. |
+| TEST | Tests de Domain con repositorios de prueba | Implementados. |
+| TEST | Tests de Data sobre caché | Implementados. |
+| TEST | Tests de Presentation (opcionales, valorados) | Presenter, Interactor y Coordinator probados con XCTest. |
+| ENT | Repositorio con código y tests | Código y pruebas incluidos. |
+| DOC | README con API, ejecución y decisiones | Se actualiza con cada tanda. |
+| ARQ | VIP con Coordinator (petición propia) | VIP y Coordinator conectados. |
+| DIS | SOLID e inyección de dependencias (petición propia) | Contratos en Domain y Data; Interactor recibe caso de uso y Presenter por inicializador. |
+| TEST | Swift Testing y XCTest (petición propia) | Ambos frameworks incluidos. |
+| A11Y | Accesibilidad y resumen al pie de cada vista (petición propia) | Medidas y resúmenes incluidos; auditoría completa pendiente. |
+| CI | Jobs de tests y entrega a TestFlight (petición propia) | Jobs de tests y entrega preparados; firma y ejecución reales pendientes de configuración. |
+| SWIFT | Swift 6 (perfil) | Configurado en Debug y Release. |
 
 <!-- REQUISITO [TEST]: Presenter, Interactor y Coordinator tienen tests de XCTest. -->
 <!-- PENDIENTE PROPIO [CI]: Configurar firma y comprobar el flujo real en GitHub. -->
 
-## Lo siguiente
+## Lo siguiente que quedaría pendiente sería
 
 1. Comprobar el job de tests en GitHub.
 2. Configurar la firma y comprobar la entrega real a TestFlight.
 3. Completar la revisión manual de accesibilidad en dispositivo.
 
-Iremos actualizando este README con las decisiones y las instrucciones de cada tanda. El `.gitignore` deja fuera archivos locales de Xcode, compilaciones y credenciales.
+Se irá actualizando este README con las decisiones y las instrucciones de cada tanda. El `.gitignore` deja fuera archivos locales de Xcode, compilaciones y credenciales.
