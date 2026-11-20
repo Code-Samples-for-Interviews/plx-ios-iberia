@@ -8,7 +8,7 @@ La idea es hacerlo sencillo, separar bien las responsabilidades y explicar las d
 
 ## Qué hay ahora
 
-Tenemos Domain y Data con sus tests: la lógica de entrada de búsqueda, la conexión con iTunes y la caché en memoria. También están el Presenter y el Interactor de búsqueda, con tests de XCTest. La pantalla sigue siendo la inicial; falta conectarla con estas piezas.
+La búsqueda ya está conectada: escribimos un artista o un álbum y vemos los resultados de iTunes en una lista. Se muestran los estados de carga, lista vacía y error, con opción de reintentar. El detalle y la navegación con Coordinator son la siguiente tanda.
 
 ## Cómo arrancarlo
 
@@ -35,7 +35,7 @@ No vamos a modularizar de entrada. Para el tamaño de esta prueba, las carpetas 
 
 La normalización vive en el caso de uso para que la interfaz y la caché utilicen la misma query. No cambiamos los espacios interiores ni los acentos.
 
-Comprobamos la cancelación antes y después de consultar el repositorio. Así tampoco devolvemos resultados si una implementación termina la consulta sin atender la cancelación. El Interactor añade el debounce y descarta respuestas antiguas; falta conectarlo con la búsqueda en la pantalla.
+Comprobamos la cancelación antes y después de consultar el repositorio. Así tampoco devolvemos resultados si una implementación termina la consulta sin atender la cancelación. El Interactor añade el debounce y descarta respuestas antiguas; la vista lo ejecuta dentro de su tarea de búsqueda.
 
 ## Datos: iTunes y caché
 
@@ -72,15 +72,19 @@ Usaremos **VIP con Coordinator**. La vista muestra el estado, el Interactor coor
 
 Cada cambio de texto invalida el intento anterior y limpia el estado del Presenter inmediatamente. Antes de presentar el resultado se comprueba la cancelación y el identificador del intento. También se descartan los errores antiguos. Cancelar no muestra un error, y se puede reintentar sin cambiar el texto.
 
-La tarea será de la vista mediante `.task(id: interactor.requestID)`: SwiftUI cancelará la anterior cuando cambie el identificador o desaparezca la pantalla. El Interactor es una operación async y no crea tareas independientes. Sus tests reproducen esa cancelación y también una respuesta tardía que llega sin haberla cancelado.
+La tarea es de la vista mediante `.task(id: interactor.requestID)`: SwiftUI cancela la anterior cuando cambia el identificador o desaparece la pantalla. El Interactor es una operación async y no crea tareas independientes. Sus tests reproducen esa cancelación y también una respuesta tardía que llega sin haberla cancelado.
 
-En esta tanda no cambiamos la pantalla. Conectaremos la vista en la siguiente; el Coordinator llegará con el detalle, cuando haya navegación que gestionar.
+La app crea el repositorio, el caso de uso, el Presenter y el Interactor. La vista recibe esas piezas, envía el texto al Interactor y dibuja el estado del Presenter. No hace peticiones por su cuenta. La preview usa datos de muestra sin red.
+
+Las filas todavía no navegan. El Coordinator llegará con el detalle en la siguiente tanda.
 
 ## Accesibilidad
 
 Cada archivo de interfaz lleva al final un resumen de accesibilidad y cómo probarlo. La idea es que quien toque una vista sepa qué debe respetar y comprobar.
 
-Revisaremos VoiceOver, texto grande, modo oscuro y orientación horizontal. Por ahora están las indicaciones de prueba; queda hacer esas comprobaciones.
+El buscador y la lista usan controles nativos. Cada fila agrupa título y artista, los textos se adaptan a Dynamic Type y se anuncian resultados y errores sin mover el foco. Usamos colores del sistema y no comunicamos estados solo con color.
+
+Se ha comprobado en simulador la búsqueda real, el cambio y la limpieza del texto, el estado sin resultados y la lista con el texto de accesibilidad más grande en modo oscuro. Queda hacer la revisión completa con VoiceOver, Voice Control y Switch Control en dispositivo, además de la orientación horizontal. Repetiremos las comprobaciones cuando cambie la pantalla.
 
 ## Cómo marcamos los requisitos
 
@@ -97,12 +101,12 @@ Los comentarios van junto al código que cumple cada punto y, cuando corresponde
 | Referencia | Qué pide | Estado actual |
 | --- | --- | --- |
 | ARQ-01 | Separar Data, Domain y Presentation | Capas organizadas en carpetas dentro del mismo target. |
-| API-01 | Consumir una API pública | Data consulta iTunes; conectar la pantalla está pendiente. |
-| UI-01 | Pantallas en SwiftUI | La pantalla inicial usa SwiftUI; faltan búsqueda y detalle. |
-| BUS-01 | Campo de texto para buscar | Pendiente. |
-| BUS-02 | Mostrar resultados en una lista | Pendiente. |
+| API-01 | Consumir una API pública | Búsqueda de iTunes conectada con la pantalla. |
+| UI-01 | Pantallas en SwiftUI | Búsqueda en SwiftUI; detalle pendiente. |
+| BUS-01 | Campo de texto para buscar | Implementado con searchable. |
+| BUS-02 | Mostrar resultados en una lista | Implementado con List y ForEach. |
 | CAN-01 | Lógica asíncrona que respete la cancelación | Implementada y probada en Domain, Data e Interactor. |
-| CAN-02 | Cancelar la búsqueda anterior y evitar resultados antiguos | Interactor probado; falta conectar la cancelación de la tarea en la vista. |
+| CAN-02 | Cancelar la búsqueda anterior y evitar resultados antiguos | Tarea de SwiftUI conectada con el identificador de cada intento; comprobaciones en Interactor. |
 | DET-01 | Navegar al seleccionar un resultado | Pendiente. |
 | DET-02 | Mostrar al menos tres campos en el detalle | Pendiente; el modelo ya contiene los datos. |
 | CACHE-01 | Caché en memoria por query | Implementada. |
@@ -115,10 +119,10 @@ Los comentarios van junto al código que cumple cada punto y, cuando corresponde
 | TEST-04 | Tests de Presentation (opcionales, valorados) | Presenter e Interactor probados con XCTest. |
 | ENT-01 | Repositorio con código y tests | Código y pruebas incluidos. |
 | DOC-01 | README con API, ejecución y decisiones | Se actualiza con cada tanda. |
-| ARQ-02 | VIP con Coordinator (petición propia) | Presenter e Interactor implementados; conexión de la vista y Coordinator pendientes. |
+| ARQ-02 | VIP con Coordinator (petición propia) | VIP conectado; Coordinator pendiente con el detalle. |
 | DIS-01 | SOLID e inyección de dependencias (petición propia) | Contratos en Domain y Data; Interactor recibe caso de uso y Presenter por inicializador. |
 | TEST-03 | Swift Testing y XCTest (petición propia) | Ambos frameworks incluidos. |
-| A11Y-01 | Accesibilidad y resumen al pie de cada vista (petición propia) | Resúmenes incluidos en la pantalla inicial; faltan las nuevas vistas y las comprobaciones. |
+| A11Y-01 | Accesibilidad y resumen al pie de cada vista (petición propia) | Medidas y resumen de búsqueda incluidos; detalle y auditoría completa pendientes. |
 | CI-01 | Jobs de tests y entrega a TestFlight (petición propia) | Pendiente. |
 | SWIFT-01 | Swift 6 (perfil) | Configurado en Debug y Release. |
 
@@ -127,8 +131,7 @@ Los comentarios van junto al código que cumple cada punto y, cuando corresponde
 
 ## Lo siguiente
 
-1. Conectar la vista SwiftUI: campo de búsqueda, lista y estados de pantalla.
-2. Detalle y navegación con Coordinator.
-3. Jobs de GitHub para tests y entrega a TestFlight.
+1. Detalle y navegación con Coordinator.
+2. Jobs de GitHub para tests y entrega a TestFlight.
 
 Iremos actualizando este README con las decisiones y las instrucciones de cada tanda. El `.gitignore` deja fuera archivos locales de Xcode, compilaciones y credenciales.

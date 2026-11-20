@@ -27,10 +27,10 @@ struct ITunesAlbumRepository: AlbumRepository {
         return albums
     }
 
+    // REQUISITO [CANCELACION]: Una respuesta recibida después de cancelar no continúa el flujo.
     private func fetchAlbums(query: String) async throws -> [Album] {
         let request = try makeRequest(query: query)
         let (data, response) = try await client.data(for: request)
-        // REQUISITO [CANCELACION]: Una respuesta recibida después de cancelar no continúa el flujo.
         try Task.checkCancellation()
         guard (200..<300).contains(response.statusCode) else {
             throw HTTPError.statusCode(response.statusCode)

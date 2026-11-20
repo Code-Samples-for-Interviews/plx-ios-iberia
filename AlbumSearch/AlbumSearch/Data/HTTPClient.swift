@@ -22,8 +22,8 @@ struct URLSessionHTTPClient: HTTPClient {
         session = URLSession(configuration: configuration)
     }
 
+    // REQUISITO [CANCELACION]: Esperar esta llamada conserva la cancelación de la tarea de búsqueda.
     func data(for request: URLRequest) async throws -> (Data, HTTPURLResponse) {
-        // REQUISITO [CANCELACION]: Esperar esta llamada conserva la cancelación de la tarea de búsqueda.
         let (data, response) = try await session.data(for: request)
         guard let response = response as? HTTPURLResponse else {
             throw HTTPError.invalidResponse
