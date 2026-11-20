@@ -25,6 +25,23 @@ Todo está dentro de un único target, separado en estas carpetas:
 - **Data:** llamadas a la API y caché.
 - **Presentation:** pantallas y lógica de presentación.
 
+Dentro de Presentation agrupamos por pantalla y dejamos la navegación aparte. Las carpetas del disco y los grupos de Xcode tienen la misma estructura:
+
+```text
+Presentation/
+├── Navigation/
+│   ├── AlbumCoordinator.swift
+│   └── AlbumNavigationView.swift
+├── Search/
+│   ├── AlbumSearchView.swift
+│   ├── SearchInteractor.swift
+│   └── SearchPresenter.swift
+└── Detail/
+    └── AlbumDetailView.swift
+```
+
+Así se ve el VIP de búsqueda junto y el Coordinator queda fácil de localizar. El detalle solo muestra datos recibidos, por eso no tiene Interactor ni Presenter propios. Los tests de Presentation siguen la misma distribución: Search y Navigation, sin carpetas vacías.
+
 No vamos a modularizar de entrada. Para el tamaño de esta prueba, las carpetas son suficientes. Si más adelante tiene sentido extraer un módulo, lo haremos. Mientras tanto, cuidaremos las dependencias mediante protocolos e inyección por inicializador.
 
 ## Búsqueda: Domain
