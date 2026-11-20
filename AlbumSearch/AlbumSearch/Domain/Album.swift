@@ -1,7 +1,8 @@
 import Foundation
 
 /// REQUISITO [ARQ]: El modelo de Domain no conoce el formato de la API ni la interfaz.
-struct Album: Identifiable, Equatable, Sendable {
+// Hashable permite representar el destino de navegación como un valor.
+struct Album: Identifiable, Hashable, Sendable {
     let id: Int
     let title: String
     let artist: String

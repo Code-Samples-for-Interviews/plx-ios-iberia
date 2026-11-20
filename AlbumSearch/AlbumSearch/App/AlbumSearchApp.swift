@@ -2,6 +2,7 @@ import SwiftUI
 
 @main
 struct AlbumSearchApp: App {
+    @State private var coordinator = AlbumCoordinator()
     @State private var presenter: SearchPresenter
     @State private var interactor: SearchInteractor
 
@@ -15,12 +16,12 @@ struct AlbumSearchApp: App {
 
     var body: some Scene {
         WindowGroup {
-            AlbumSearchView(interactor: interactor, presenter: presenter)
+            AlbumNavigationView(coordinator: coordinator, interactor: interactor, presenter: presenter)
         }
     }
 }
 
 // Resumen de accesibilidad y cómo comprobarla.
 // - La escena respeta el tamaño de texto y la apariencia elegidos por el usuario.
-// - El comportamiento de la pantalla se explica al final de AlbumSearchView.
+// - Las comprobaciones de búsqueda, detalle y navegación están al pie de sus respectivas vistas.
 // Cómo probarlo: abrir con VoiceOver y un tamaño de texto de accesibilidad para comprobar que la búsqueda es accesible.

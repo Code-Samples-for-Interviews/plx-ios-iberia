@@ -8,7 +8,7 @@ La idea es hacerlo sencillo, separar bien las responsabilidades y explicar las d
 
 ## Qué hay ahora
 
-La búsqueda ya está conectada: escribimos un artista o un álbum y vemos los resultados de iTunes en una lista. Se muestran los estados de carga, lista vacía y error, con opción de reintentar. El detalle y la navegación con Coordinator son la siguiente tanda.
+La búsqueda ya está conectada: escribimos un artista o un álbum y vemos los resultados de iTunes en una lista. Se muestran los estados de carga, lista vacía y error, con opción de reintentar. Al seleccionar un resultado abrimos su detalle. El Coordinator mantiene el estado de navegación.
 
 ## Cómo arrancarlo
 
@@ -42,7 +42,7 @@ Comprobamos la cancelación antes y después de consultar el repositorio. Así t
 Usamos la [API pública de iTunes](https://performance-partners.apple.com/search-api). No necesita claves. Buscamos álbumes en la tienda española, con un máximo de 30 resultados por petición. La API también puede devolver singles y EPs.
 
 - **HTTPClient:** el contrato de transporte permite probar Data sin usar la red. La implementación real usa URLSession, HTTPS y un timeout de petición de 15 segundos.
-- **ITunesSearchResponse:** adapta el JSON al modelo Album. Los nombres del servicio no salen de Data. Si faltan los campos opcionales, el género indica que no está disponible, el número de pistas queda en 0 y la fecha en nil. En el detalle trataremos ese 0 como dato no disponible.
+- **ITunesSearchResponse:** adapta el JSON al modelo Album. Los nombres del servicio no salen de Data. Si faltan los campos opcionales, el género indica que no está disponible, el número de pistas queda en 0 y la fecha en nil. El detalle muestra ese 0 y la fecha ausente como datos no disponibles.
 - **ITunesAlbumRepository:** implementa el contrato de Domain. Su búsqueda solo coordina tres pasos: consultar la caché, pedir datos si hacen falta y guardarlos. La petición HTTP y la decodificación están separadas en métodos propios.
 - **AlbumSearchCache:** guarda los resultados y se encarga de su caducidad y del límite de entradas. Es un actor para proteger ese estado; el repositorio no necesita serlo porque no tiene estado mutable propio.
 
@@ -58,13 +58,13 @@ Por ahora no hay persistencia en disco, datos caducados como alternativa sin con
 
 ## Tests
 
-En Xcode, seleccionamos el esquema **AlbumSearch** y ejecutamos **Product → Test** o **⌘U**. El target **AlbumSearchTests** usa Swift Testing para Domain y Data, y XCTest para Presenter e Interactor. Ninguno de estos tests hace llamadas de red.
+En Xcode, seleccionamos el esquema **AlbumSearch** y ejecutamos **Product → Test** o **⌘U**. El target **AlbumSearchTests** usa Swift Testing para Domain y Data, y XCTest para Presenter, Interactor y Coordinator. Ninguno de estos tests hace llamadas de red.
 
-Comprobamos búsquedas vacías, normalización, resultados, errores y cancelación antes y durante la consulta. Usamos repositorios de prueba y controlamos cuándo termina una petición; no hay que esperar a la red ni usar pausas para reproducir la cancelación. En Data también comprobamos la petición, el mapeo, el uso y la expiración de la caché, sus límites y que no guarde errores o respuestas canceladas. La caché tiene además sus propias pruebas de capacidad y cancelación al leer o guardar. Los tests del Presenter comprueban los estados de resultados, lista vacía, carga, reinicio y mensajes de error. Los del Interactor fuerzan respuestas fuera de orden, errores antiguos, limpieza del texto, cancelación y reintento.
+Comprobamos búsquedas vacías, normalización, resultados, errores y cancelación antes y durante la consulta. Usamos repositorios de prueba y controlamos cuándo termina una petición; no hay que esperar a la red ni usar pausas para reproducir la cancelación. En Data también comprobamos la petición, el mapeo, el uso y la expiración de la caché, sus límites y que no guarde errores o respuestas canceladas. La caché tiene además sus propias pruebas de capacidad y cancelación al leer o guardar. Los tests del Presenter comprueban los estados de resultados, lista vacía, carga, reinicio y mensajes de error. Los del Interactor fuerzan respuestas fuera de orden, errores antiguos, limpieza del texto, cancelación y reintento. Los del Coordinator comprueban el álbum que se abre y que solo haya un nivel de detalle.
 
 ## Presentación y navegación
 
-Usaremos **VIP con Coordinator**. La vista muestra el estado, el Interactor coordina la búsqueda, el Presenter prepara lo que se muestra y el Coordinator gestiona la navegación.
+Usamos **VIP con Coordinator**. La vista muestra el estado, el Interactor coordina la búsqueda, el Presenter prepara lo que se muestra y el Coordinator gestiona la navegación.
 
 **SearchPresenter** recibe resultados o errores y prepara un estado: inicial, cargando, con resultados, vacío o con error. Se actualiza en MainActor y no conoce el repositorio ni gestiona tareas.
 
@@ -76,15 +76,19 @@ La tarea es de la vista mediante `.task(id: interactor.requestID)`: SwiftUI canc
 
 La app crea el repositorio, el caso de uso, el Presenter y el Interactor. La vista recibe esas piezas, envía el texto al Interactor y dibuja el estado del Presenter. No hace peticiones por su cuenta. La preview usa datos de muestra sin red.
 
-Las filas todavía no navegan. El Coordinator llegará con el detalle en la siguiente tanda.
+**AlbumCoordinator** conserva la ruta y recibe la selección de un álbum. **AlbumNavigationView** contiene el NavigationStack y decide qué pantalla corresponde a ese destino. La búsqueda solo comunica la selección mediante una acción; no construye el detalle.
+
+Solo hay un destino posible, por eso la ruta es una lista de álbumes con un único elemento al abrir el detalle. Album conforma a Hashable, que es lo que necesita NavigationStack para representar sus destinos como valores. El botón de volver del sistema actualiza la ruta.
+
+**AlbumDetailView** muestra título, artista, género, pistas y fecha con los datos que ya teníamos. No hace otra petición y no necesita un Interactor ni un Presenter propios. Los campos se colocan en vertical para dar espacio al texto grande; la fecha respeta el formato regional y se muestra en UTC para conservar el día de lanzamiento.
 
 ## Accesibilidad
 
 Cada archivo de interfaz lleva al final un resumen de accesibilidad y cómo probarlo. La idea es que quien toque una vista sepa qué debe respetar y comprobar.
 
-El buscador y la lista usan controles nativos. Cada fila agrupa título y artista, los textos se adaptan a Dynamic Type y se anuncian resultados y errores sin mover el foco. Usamos colores del sistema y no comunicamos estados solo con color.
+El buscador y la lista usan controles nativos. Cada fila agrupa título y artista y explica que abre el detalle. En el detalle, el título es un encabezado y cada campo agrupa etiqueta y valor. Los textos se adaptan a Dynamic Type y se anuncian resultados y errores sin mover el foco. Usamos colores del sistema y no comunicamos estados solo con color.
 
-Se ha comprobado en simulador la búsqueda real, el cambio y la limpieza del texto, el estado sin resultados y la lista con el texto de accesibilidad más grande en modo oscuro. Queda hacer la revisión completa con VoiceOver, Voice Control y Switch Control en dispositivo, además de la orientación horizontal. Repetiremos las comprobaciones cuando cambie la pantalla.
+Se ha comprobado en simulador la búsqueda real, el cambio y la limpieza del texto y el estado sin resultados. También se ha revisado abrir dos álbumes distintos, volver al listado conservando la búsqueda y leer la lista y el detalle con el texto de accesibilidad más grande en modo oscuro. Queda hacer la revisión completa con VoiceOver, Voice Control y Switch Control en dispositivo, además de la orientación horizontal. Repetiremos las comprobaciones cuando cambie la pantalla.
 
 ## Cómo marcamos los requisitos
 
@@ -102,13 +106,13 @@ Los comentarios van junto al código que cumple cada punto y, cuando corresponde
 | --- | --- | --- |
 | ARQ-01 | Separar Data, Domain y Presentation | Capas organizadas en carpetas dentro del mismo target. |
 | API-01 | Consumir una API pública | Búsqueda de iTunes conectada con la pantalla. |
-| UI-01 | Pantallas en SwiftUI | Búsqueda en SwiftUI; detalle pendiente. |
+| UI-01 | Pantallas en SwiftUI | Búsqueda, detalle y contenedor de navegación en SwiftUI. |
 | BUS-01 | Campo de texto para buscar | Implementado con searchable. |
 | BUS-02 | Mostrar resultados en una lista | Implementado con List y ForEach. |
 | CAN-01 | Lógica asíncrona que respete la cancelación | Implementada y probada en Domain, Data e Interactor. |
 | CAN-02 | Cancelar la búsqueda anterior y evitar resultados antiguos | Tarea de SwiftUI conectada con el identificador de cada intento; comprobaciones en Interactor. |
-| DET-01 | Navegar al seleccionar un resultado | Pendiente. |
-| DET-02 | Mostrar al menos tres campos en el detalle | Pendiente; el modelo ya contiene los datos. |
+| DET-01 | Navegar al seleccionar un resultado | Implementado con Coordinator y NavigationStack. |
+| DET-02 | Mostrar al menos tres campos en el detalle | Título, artista, género, pistas y fecha. |
 | CACHE-01 | Caché en memoria por query | Implementada. |
 | CACHE-02 | Vigencia limitada | Implementada; tres minutos es nuestra elección. |
 | CACHE-03 | Caché válida sin llamada de red | Implementado y probado. |
@@ -116,22 +120,21 @@ Los comentarios van junto al código que cumple cada punto y, cuando corresponde
 | CACHE-05 | Persistencia en disco (opcional) | No implementada; la caché en memoria cubre la prueba. |
 | TEST-01 | Tests de Domain con repositorios de prueba | Implementados. |
 | TEST-02 | Tests de Data sobre caché | Implementados. |
-| TEST-04 | Tests de Presentation (opcionales, valorados) | Presenter e Interactor probados con XCTest. |
+| TEST-04 | Tests de Presentation (opcionales, valorados) | Presenter, Interactor y Coordinator probados con XCTest. |
 | ENT-01 | Repositorio con código y tests | Código y pruebas incluidos. |
 | DOC-01 | README con API, ejecución y decisiones | Se actualiza con cada tanda. |
-| ARQ-02 | VIP con Coordinator (petición propia) | VIP conectado; Coordinator pendiente con el detalle. |
+| ARQ-02 | VIP con Coordinator (petición propia) | VIP y Coordinator conectados. |
 | DIS-01 | SOLID e inyección de dependencias (petición propia) | Contratos en Domain y Data; Interactor recibe caso de uso y Presenter por inicializador. |
 | TEST-03 | Swift Testing y XCTest (petición propia) | Ambos frameworks incluidos. |
-| A11Y-01 | Accesibilidad y resumen al pie de cada vista (petición propia) | Medidas y resumen de búsqueda incluidos; detalle y auditoría completa pendientes. |
+| A11Y-01 | Accesibilidad y resumen al pie de cada vista (petición propia) | Medidas y resúmenes incluidos; auditoría completa pendiente. |
 | CI-01 | Jobs de tests y entrega a TestFlight (petición propia) | Pendiente. |
 | SWIFT-01 | Swift 6 (perfil) | Configurado en Debug y Release. |
 
-<!-- REQUISITO [TEST]: Presenter e Interactor tienen tests de XCTest. -->
+<!-- REQUISITO [TEST]: Presenter, Interactor y Coordinator tienen tests de XCTest. -->
 <!-- PENDIENTE PROPIO [CI-01]: Marcar los jobs y su dependencia cuando se implemente el workflow. -->
 
 ## Lo siguiente
 
-1. Detalle y navegación con Coordinator.
-2. Jobs de GitHub para tests y entrega a TestFlight.
+1. Jobs de GitHub para tests y entrega a TestFlight.
 
 Iremos actualizando este README con las decisiones y las instrucciones de cada tanda. El `.gitignore` deja fuera archivos locales de Xcode, compilaciones y credenciales.

@@ -1,31 +1,29 @@
 import SwiftUI
 
-// PENDIENTE [DET-01, DET-02]: Navegar al detalle y mostrar al menos tres campos del álbum.
 struct AlbumSearchView: View {
     @Bindable var interactor: SearchInteractor
     let presenter: SearchPresenter
+    let onSelect: @MainActor (Album) -> Void
 
     var body: some View {
-        NavigationStack {
-            List {
-                content
-            }
-            .navigationTitle("Buscador de álbumes")
-            // REQUISITO [BUSQUEDA]: Campo de texto que comunica la búsqueda al Interactor.
-            .searchable(text: $interactor.query,
-                        placement: .navigationBarDrawer(displayMode: .always),
-                        prompt: "Artista o álbum")
-            .autocorrectionDisabled()
-            .textInputAutocapitalization(.never)
-            .scrollDismissesKeyboard(.interactively)
-            // REQUISITO [CANCELACION]: SwiftUI cancela la tarea anterior al cambiar el intento o desaparecer la vista.
-            .task(id: interactor.requestID) {
-                await interactor.search()
-            }
-            // Elemento accesible. Anuncia resultados y errores sin mover el foco del usuario.
-            .onChange(of: presenter.state) { _, state in
-                announce(state)
-            }
+        List {
+            content
+        }
+        .navigationTitle("Buscador de álbumes")
+        // REQUISITO [BUSQUEDA]: Campo de texto que comunica la búsqueda al Interactor.
+        .searchable(text: $interactor.query,
+                    placement: .navigationBarDrawer(displayMode: .always),
+                    prompt: "Artista o álbum")
+        .autocorrectionDisabled()
+        .textInputAutocapitalization(.never)
+        .scrollDismissesKeyboard(.interactively)
+        // REQUISITO [CANCELACION]: SwiftUI cancela la tarea anterior al cambiar el intento o desaparecer la vista.
+        .task(id: interactor.requestID) {
+            await interactor.search()
+        }
+        // Elemento accesible. Anuncia resultados y errores sin mover el foco del usuario.
+        .onChange(of: presenter.state) { _, state in
+            announce(state)
         }
     }
 
@@ -42,7 +40,7 @@ struct AlbumSearchView: View {
         case .loaded(let albums):
             // REQUISITO [LISTADO]: Mostrar los resultados en una lista.
             ForEach(albums) { album in
-                albumRow(album)
+                albumButton(album)
             }
         case .empty:
             ContentUnavailableView("No hay resultados",
@@ -51,6 +49,25 @@ struct AlbumSearchView: View {
         case .failed(let message):
             errorContent(message)
         }
+    }
+
+    // REQUISITO [NAVEGACION]: La selección se comunica al Coordinator mediante esta acción.
+    private func albumButton(_ album: Album) -> some View {
+        Button {
+            onSelect(album)
+        } label: {
+            HStack {
+                albumRow(album)
+                Spacer(minLength: 12)
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+                    .accessibilityHidden(true)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint("Muestra los detalles del álbum")
     }
 
     private func albumRow(_ album: Album) -> some View {
@@ -98,7 +115,7 @@ struct AlbumSearchView: View {
 #Preview {
     let presenter = SearchPresenter()
     let interactor = SearchInteractor(searchAlbums: SearchAlbums(repository: PreviewAlbumRepository()), presenter: presenter)
-    AlbumSearchView(interactor: interactor, presenter: presenter)
+    AlbumNavigationView(coordinator: AlbumCoordinator(), interactor: interactor, presenter: presenter)
 }
 
 // Datos de muestra para usar la preview sin depender de la red.
@@ -110,9 +127,9 @@ private struct PreviewAlbumRepository: AlbumRepository {
 
 // Resumen de accesibilidad y cómo comprobarla.
 // - Búsqueda, lista y botón de reintento nativos, compatibles con VoiceOver y ayudas del sistema.
-// - Cada fila agrupa título y artista. Se anuncian resultados y errores sin cambiar el foco.
+// - Cada fila abre el detalle y agrupa título y artista; la flecha es decorativa. Se anuncian resultados y errores sin cambiar el foco.
 // - Fuentes del sistema y texto sin truncar para respetar todos los tamaños de Dynamic Type.
 // - Colores del sistema para modo oscuro y contraste aumentado. Ningún estado depende solo del color.
-// Cómo probarlo: con VoiceOver, buscar, escuchar el resultado y recorrer las filas. Probar también
+// Cómo probarlo: con VoiceOver, buscar, abrir un resultado y volver al listado. Probar también
 // una búsqueda sin resultados y un error con reintento. Repetir con el texto de accesibilidad más grande,
 // en horizontal y modo oscuro. Comprobar que todo se puede leer y recorrer con Voice Control y Switch Control.

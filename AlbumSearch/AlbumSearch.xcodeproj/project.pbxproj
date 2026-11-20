@@ -118,6 +118,9 @@
 				"B891A23DF811A1001F9985D0",
 				"875D0DA6007DEC13D47FDE5C",
 				"E15BD819FC4720247CD98018",
+				"DBE2C6C6E53167BA28735F9E",
+				"0A0A50302BD71E2BD25F5EA5",
+				"8A1DD387AA407E165186B325",
 			);
 			"runOnlyForDeploymentPostprocessing" = "0";
 		};
@@ -272,6 +275,9 @@
 				"8231D345A387E595D49715B1",
 				"C4114B19CD9AEB8EB956A8C4",
 				"5852C78891E03370BBAB6E22",
+				"E8F6F35C80CA9D21A5B0061C",
+				"935AB0B9008A650D1E59CC53",
+				"4A04E4DBA590C48139506A9A",
 			);
 		};
 		"50C70246D81E6E46E74E2FC4" = {
@@ -360,6 +366,7 @@
 				"AE6EE188EB1FF0267105DABC",
 				"85155AD3204DA1F8C2422224",
 				"5238DAD6F09847A643E7B9DA",
+				"AFFE8F1C62ACC047F1D61936",
 			);
 			"runOnlyForDeploymentPostprocessing" = "0";
 		};
@@ -553,6 +560,7 @@
 			"children" = (
 				"F8B9A679A23A9CEE11B906FF",
 				"DBD0C27D2C9385A14E28DC2D",
+				"07B09FEEBFF4275ADD46B169",
 			);
 		};
 		"5852C78891E03370BBAB6E22" = {
@@ -574,6 +582,46 @@
 		"5238DAD6F09847A643E7B9DA" = {
 			"isa" = "PBXBuildFile";
 			"fileRef" = "DBD0C27D2C9385A14E28DC2D";
+		};
+		"E8F6F35C80CA9D21A5B0061C" = {
+			"isa" = "PBXFileReference";
+			"path" = "AlbumCoordinator.swift";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "<group>";
+		};
+		"DBE2C6C6E53167BA28735F9E" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "E8F6F35C80CA9D21A5B0061C";
+		};
+		"935AB0B9008A650D1E59CC53" = {
+			"isa" = "PBXFileReference";
+			"path" = "AlbumNavigationView.swift";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "<group>";
+		};
+		"0A0A50302BD71E2BD25F5EA5" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "935AB0B9008A650D1E59CC53";
+		};
+		"4A04E4DBA590C48139506A9A" = {
+			"isa" = "PBXFileReference";
+			"path" = "AlbumDetailView.swift";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "<group>";
+		};
+		"8A1DD387AA407E165186B325" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "4A04E4DBA590C48139506A9A";
+		};
+		"07B09FEEBFF4275ADD46B169" = {
+			"isa" = "PBXFileReference";
+			"path" = "AlbumCoordinatorTests.swift";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "<group>";
+		};
+		"AFFE8F1C62ACC047F1D61936" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "07B09FEEBFF4275ADD46B169";
 		};
 	};
 	"rootObject" = "98F54143AB4E86B28C3AFEE0";
