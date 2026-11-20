@@ -74,6 +74,9 @@
 				"INFOPLIST_KEY_CFBundleDisplayName" = "Buscador de álbumes";
 				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
 				"ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME" = "AccentColor";
+				/* REQUISITO DEL PERFIL [ENTREGA]: Icono y declaración de cifrado para distribución. */
+				"ASSETCATALOG_COMPILER_APPICON_NAME" = "AppIcon";
+				"INFOPLIST_KEY_ITSAppUsesNonExemptEncryption" = "NO";
 				"INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad" = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				"CODE_SIGN_STYLE" = "Automatic";
 				"INFOPLIST_KEY_LSApplicationCategoryType" = "public.app-category.music";
@@ -210,6 +213,9 @@
 				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
 				"INFOPLIST_KEY_LSApplicationCategoryType" = "public.app-category.music";
 				"ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME" = "AccentColor";
+				/* REQUISITO DEL PERFIL [ENTREGA]: Icono y declaración de cifrado para distribución. */
+				"ASSETCATALOG_COMPILER_APPICON_NAME" = "AppIcon";
+				"INFOPLIST_KEY_ITSAppUsesNonExemptEncryption" = "NO";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "com.example.AlbumSearch";
 				"CURRENT_PROJECT_VERSION" = "1";
 				"INFOPLIST_KEY_CFBundleDisplayName" = "Buscador de álbumes";

@@ -16,9 +16,9 @@ for name in APPLE_TEAM_ID APP_BUNDLE_ID ASC_KEY_ID ASC_ISSUER_ID \
   fi
 done
 
-# PENDIENTE [ENTREGA]: Añadir el icono antes de habilitar la primera subida.
-if [[ ! -d AlbumSearch/AlbumSearch/Assets.xcassets/AppIcon.appiconset ]]; then
-  echo "Falta el AppIcon. Configúralo en el catálogo y en el target antes de activar la entrega." >&2
+# REQUISITO DEL PERFIL [ENTREGA]: Comprobar el recurso necesario antes de preparar la firma.
+if [[ ! -f AlbumSearch/AlbumSearch/Assets.xcassets/AppIcon.appiconset/AppIcon.png ]]; then
+  echo "Falta AppIcon.png. Ejecuta swift scripts/generate-app-icon.swift y añade el PNG al commit." >&2
   exit 1
 fi
 

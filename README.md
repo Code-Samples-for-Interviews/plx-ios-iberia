@@ -100,7 +100,7 @@ El script `scripts/deliver-testflight.sh` prepara la firma, archiva en Release y
 ### Qué hay que configurar
 
 1. Tener una cuenta activa del Apple Developer Program, registrar un Bundle ID propio y crear la app en App Store Connect con ese mismo identificador. El `com.example.AlbumSearch` del proyecto es de ejemplo; el job lo sustituye con `APP_BUNDLE_ID`.
-2. Añadir un icono válido en `AppIcon.appiconset` y seleccionarlo como App Icon del target. **Todavía no está incluido**: el script lo comprueba antes de tocar la firma. Hay que completar también los datos de la app y las preguntas de cifrado que solicite Apple.
+2. Revisar los datos de la app en App Store Connect. El icono ya está incluido y seleccionado en el target. La declaración de cifrado se explica más abajo; hay que revisarla si se añaden librerías o cambia el uso de cifrado.
 3. Exportar el certificado **Apple Distribution con su clave privada** como `.p12` protegido con contraseña. Crear y descargar un perfil **App Store Connect** para ese certificado, equipo y Bundle ID; no sirve uno de desarrollo ni Ad Hoc.
 4. Crear una clave de equipo de App Store Connect con permisos para subir builds (por ejemplo, App Manager). Guardar su `.p8`, Key ID e Issuer ID. Se usa para autenticar la subida, no sustituye al certificado de firma.
 5. En GitHub, crear el environment `testflight`, limitado a `main`, y añadir estas variables y secretos. Crear `TESTFLIGHT_ENABLED` a nivel de **repositorio**, porque decide si el job llega a ejecutarse.
@@ -121,11 +121,21 @@ En macOS podemos copiar cada archivo codificado con `base64 -i certificado.p12 |
 
 El script crea un llavero temporal y elimina el certificado, el perfil y la clave al terminar, también si falla. Está pensado para runners efímeros de GitHub, no para ejecutarlo en el Mac de trabajo ni en un runner compartido. Si caduca el certificado o el perfil, hay que renovar los secretos correspondientes.
 
+### Icono y configuración de la app
+
+El icono es un disco sencillo, dibujado con círculos. El catálogo incluye un PNG de 1024 × 1024, sin transparencia, y `AppIcon` está seleccionado en Debug y Release. Xcode genera los tamaños necesarios a partir de ese recurso. No añadimos variantes propias para modo oscuro ni una herramienta de diseño al proyecto.
+
+El PNG está versionado: ni la compilación ni el job de entrega necesitan regenerarlo. Para cambiar los colores o el dibujo, editamos `scripts/generate-app-icon.swift` y lo ejecutamos desde la raíz del repositorio con `swift scripts/generate-app-icon.swift`. Solo utiliza frameworks de macOS. Hay que incluir el PNG actualizado en el mismo commit que el script.
+
+Configuramos `ITSAppUsesNonExemptEncryption = NO` en el Info.plist generado. La app solo usa HTTPS mediante URLSession y no incorpora cifrado propio ni librerías de terceros. Según la [documentación de Apple sobre exportación de cifrado](https://developer.apple.com/documentation/security/complying-with-encryption-export-regulations), ese uso del cifrado del sistema está exento de aportar documentación de cifrado. La declaración no significa que las conexiones vayan sin cifrar; hay que revisarla si cambia la implementación.
+
+Se ha comprobado un archivo Release para dispositivo **sin firma**: incluye el icono y la declaración como valor booleano. Esto verifica la compilación y los recursos; no sustituye la firma, la validación de Apple ni la primera subida real.
+
 El número de build usa `GITHUB_RUN_NUMBER.GITHUB_RUN_ATTEMPT`, por ejemplo `12.1`; un reintento del mismo run pasa a `12.2`. La versión comercial sigue siendo la del proyecto. Si ya existen builds subidos por otro proceso, hay que comprobar que el número siguiente sea mayor para esa versión y evitar relanzar runs antiguos.
 
 La subida termina cuando Apple acepta el envío. El procesamiento, las preguntas de cumplimiento, la asignación a grupos y una posible revisión para testers externos se consultan en App Store Connect. No publicamos la app en la App Store. Apple explica ese paso en [cómo subir builds](https://developer.apple.com/help/app-store-connect/manage-builds/upload-builds).
 
-**Estado actual:** workflow y script preparados; validación local de configuración y flujo con comandos simulados. La firma y la subida reales siguen pendientes de icono, cuenta, credenciales y primera ejecución en GitHub. No damos por completado un deploy que todavía no hemos hecho.
+**Estado actual:** workflow y script preparados; validación local de configuración y flujo con comandos simulados. La firma y la subida reales siguen pendientes de cuenta, credenciales y primera ejecución en GitHub. No damos por completado un deploy que todavía no hemos hecho.
 
 ## Presentación y navegación
 
@@ -196,11 +206,12 @@ Los comentarios van junto al código que cumple cada punto y, cuando corresponde
 | SWIFT-01 | Swift 6 (perfil) | Configurado en Debug y Release. |
 
 <!-- REQUISITO [TEST]: Presenter, Interactor y Coordinator tienen tests de XCTest. -->
-<!-- PENDIENTE PROPIO [CI]: Configurar firma, icono y comprobar el flujo real en GitHub. -->
+<!-- PENDIENTE PROPIO [CI]: Configurar firma y comprobar el flujo real en GitHub. -->
 
 ## Lo siguiente
 
 1. Comprobar el job de tests en GitHub.
-2. Añadir el icono y configurar la firma para comprobar la entrega real a TestFlight.
+2. Configurar la firma y comprobar la entrega real a TestFlight.
+3. Completar la revisión manual de accesibilidad en dispositivo.
 
 Iremos actualizando este README con las decisiones y las instrucciones de cada tanda. El `.gitignore` deja fuera archivos locales de Xcode, compilaciones y credenciales.
