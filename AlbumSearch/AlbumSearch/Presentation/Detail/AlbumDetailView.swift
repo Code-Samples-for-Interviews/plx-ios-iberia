@@ -13,19 +13,19 @@ struct AlbumDetailView: View {
                     .font(.title2.bold())
                     .accessibilityAddTraits(.isHeader)
             }
-            Section("Información del álbum") {
-                field("Artista", value: album.artist)
-                field("Género", value: album.genre)
-                field("Pistas", value: album.trackCount > 0 ? String(album.trackCount) : "No disponible")
-                field("Lanzamiento", value: releaseDateText)
+            Section(Strings.information) {
+                field(Strings.artist, value: album.artist)
+                field(Strings.genre, value: album.genre)
+                field(Strings.tracks, value: album.trackCount > 0 ? String(album.trackCount) : Strings.unavailable)
+                field(Strings.releaseDate, value: releaseDateText)
             }
         }
-        .navigationTitle("Detalle del álbum")
+        .navigationTitle(Strings.title)
         .navigationBarTitleDisplayMode(.inline)
     }
 
     private var releaseDateText: String {
-        guard let date = album.releaseDate else { return "No disponible" }
+        guard let date = album.releaseDate else { return Strings.unavailable }
         // Mostrar el día en UTC evita desplazarlo por el huso horario del dispositivo.
         let format = Date.FormatStyle(date: .long, time: .omitted, locale: locale, timeZone: .gmt)
         return date.formatted(format)
@@ -51,6 +51,17 @@ struct AlbumDetailView: View {
             genre: "Rock", trackCount: 0, releaseDate: nil
         ))
     }
+}
+
+// REQUISITO PROPIO [TEXTOS]: Mismo enum privado que en el resto de archivos con textos.
+private enum Strings {
+    static var title: String { String(localized: "detail.title") }
+    static var information: String { String(localized: "detail.information") }
+    static var artist: String { String(localized: "detail.artist") }
+    static var genre: String { String(localized: "detail.genre") }
+    static var tracks: String { String(localized: "detail.tracks") }
+    static var releaseDate: String { String(localized: "detail.release_date") }
+    static var unavailable: String { String(localized: "detail.unavailable") }
 }
 
 // Resumen de accesibilidad y cómo comprobarla.

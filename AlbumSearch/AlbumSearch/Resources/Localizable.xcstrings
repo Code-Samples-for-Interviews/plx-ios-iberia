@@ -1,0 +1,282 @@
+{
+  "sourceLanguage": "es",
+  "strings": {
+    "album.genre_unavailable": {
+      "comment": "Valor alternativo cuando la API no devuelve el género.",
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Género no disponible"
+          }
+        }
+      }
+    },
+    "detail.artist": {
+      "comment": "Etiqueta del artista.",
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artista"
+          }
+        }
+      }
+    },
+    "detail.genre": {
+      "comment": "Etiqueta del género.",
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Género"
+          }
+        }
+      }
+    },
+    "detail.information": {
+      "comment": "Encabezado de los campos del álbum.",
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Información del álbum"
+          }
+        }
+      }
+    },
+    "detail.release_date": {
+      "comment": "Etiqueta de la fecha de lanzamiento.",
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lanzamiento"
+          }
+        }
+      }
+    },
+    "detail.title": {
+      "comment": "Título de la pantalla de detalle.",
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detalle del álbum"
+          }
+        }
+      }
+    },
+    "detail.tracks": {
+      "comment": "Etiqueta del número de pistas.",
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pistas"
+          }
+        }
+      }
+    },
+    "detail.unavailable": {
+      "comment": "Valor de un campo cuando no hay información.",
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No disponible"
+          }
+        }
+      }
+    },
+    "search.detail.hint": {
+      "comment": "Ayuda de accesibilidad de cada resultado.",
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Muestra los detalles del álbum"
+          }
+        }
+      }
+    },
+    "search.empty.announcement": {
+      "comment": "Anuncio de VoiceOver cuando no hay resultados.",
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se han encontrado álbumes."
+          }
+        }
+      }
+    },
+    "search.empty.description": {
+      "comment": "Ayuda para una búsqueda vacía.",
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prueba con otro artista o álbum."
+          }
+        }
+      }
+    },
+    "search.empty.title": {
+      "comment": "Título de una búsqueda sin resultados.",
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay resultados"
+          }
+        }
+      }
+    },
+    "search.error.connection": {
+      "comment": "Error de conexión con sugerencia de reintento.",
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hemos podido conectar con iTunes. Comprueba tu conexión y vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "search.error.title": {
+      "comment": "Título del estado de error.",
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ha podido buscar"
+          }
+        }
+      }
+    },
+    "search.error.unexpected": {
+      "comment": "Error genérico de búsqueda.",
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ha podido completar la búsqueda. Inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "search.idle.description": {
+      "comment": "Ayuda del estado inicial.",
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe un artista o un álbum para buscar en iTunes."
+          }
+        }
+      }
+    },
+    "search.idle.title": {
+      "comment": "Título antes de realizar una búsqueda.",
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Busca un álbum"
+          }
+        }
+      }
+    },
+    "search.loading": {
+      "comment": "Mensaje mientras se busca.",
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscando álbumes…"
+          }
+        }
+      }
+    },
+    "search.prompt": {
+      "comment": "Sugerencia del campo de búsqueda.",
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artista o álbum"
+          }
+        }
+      }
+    },
+    "search.results_count %lld": {
+      "comment": "Anuncio de VoiceOver con el número de resultados. El catálogo decide el plural.",
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Un álbum encontrado."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld álbumes encontrados."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "search.retry": {
+      "comment": "Acción para repetir la búsqueda.",
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar"
+          }
+        }
+      }
+    },
+    "search.title": {
+      "comment": "Título de la pantalla de búsqueda.",
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscador de álbumes"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

@@ -9,11 +9,11 @@ struct AlbumSearchView: View {
         List {
             content
         }
-        .navigationTitle("Buscador de álbumes")
+        .navigationTitle(Strings.title)
         // REQUISITO [BUSQUEDA]: Campo de texto que comunica la búsqueda al Interactor.
         .searchable(text: $interactor.query,
                     placement: .navigationBarDrawer(displayMode: .always),
-                    prompt: "Artista o álbum")
+                    prompt: Strings.prompt)
         .autocorrectionDisabled()
         .textInputAutocapitalization(.never)
         .scrollDismissesKeyboard(.interactively)
@@ -31,11 +31,11 @@ struct AlbumSearchView: View {
     private var content: some View {
         switch presenter.state {
         case .idle:
-            ContentUnavailableView("Busca un álbum",
+            ContentUnavailableView(Strings.idleTitle,
                                    systemImage: "magnifyingglass",
-                                   description: Text("Escribe un artista o un álbum para buscar en iTunes."))
+                                   description: Text(Strings.idleDescription))
         case .loading:
-            ProgressView("Buscando álbumes…")
+            ProgressView(Strings.loading)
                 .frame(maxWidth: .infinity)
         case .loaded(let albums):
             // REQUISITO [LISTADO]: Mostrar los resultados en una lista.
@@ -43,9 +43,9 @@ struct AlbumSearchView: View {
                 albumButton(album)
             }
         case .empty:
-            ContentUnavailableView("No hay resultados",
+            ContentUnavailableView(Strings.emptyTitle,
                                    systemImage: "music.note",
-                                   description: Text("Prueba con otro artista o álbum."))
+                                   description: Text(Strings.emptyDescription))
         case .failed(let message):
             errorContent(message)
         }
@@ -67,7 +67,7 @@ struct AlbumSearchView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityHint("Muestra los detalles del álbum")
+        .accessibilityHint(Strings.detailHint)
     }
 
     private func albumRow(_ album: Album) -> some View {
@@ -84,11 +84,11 @@ struct AlbumSearchView: View {
 
     private func errorContent(_ message: String) -> some View {
         ContentUnavailableView {
-            Label("No se ha podido buscar", systemImage: "exclamationmark.triangle")
+            Label(Strings.errorTitle, systemImage: "exclamationmark.triangle")
         } description: {
             Text(message)
         } actions: {
-            Button("Reintentar") {
+            Button(Strings.retry) {
                 interactor.retry()
             }
             .buttonStyle(.borderedProminent)
@@ -100,9 +100,9 @@ struct AlbumSearchView: View {
         let message: String
         switch state {
         case .loaded(let albums):
-            message = albums.count == 1 ? "Un álbum encontrado." : "\(albums.count) álbumes encontrados."
+            message = Strings.resultsAnnouncement(count: albums.count)
         case .empty:
-            message = "No se han encontrado álbumes."
+            message = Strings.emptyAnnouncement
         case .failed(let errorMessage):
             message = errorMessage
         case .idle, .loading:
@@ -122,6 +122,25 @@ struct AlbumSearchView: View {
 private struct PreviewAlbumRepository: AlbumRepository {
     func search(query: String) async throws -> [Album] {
         [Album(id: 1, title: "A Night at the Opera", artist: "Queen", genre: "Rock", trackCount: 12, releaseDate: nil)]
+    }
+}
+
+// REQUISITO PROPIO [TEXTOS]: Textos de la vista centralizados y resueltos desde el catálogo.
+private enum Strings {
+    static var title: String { String(localized: "search.title") }
+    static var prompt: String { String(localized: "search.prompt") }
+    static var idleTitle: String { String(localized: "search.idle.title") }
+    static var idleDescription: String { String(localized: "search.idle.description") }
+    static var loading: String { String(localized: "search.loading") }
+    static var emptyTitle: String { String(localized: "search.empty.title") }
+    static var emptyDescription: String { String(localized: "search.empty.description") }
+    static var detailHint: String { String(localized: "search.detail.hint") }
+    static var errorTitle: String { String(localized: "search.error.title") }
+    static var retry: String { String(localized: "search.retry") }
+    static var emptyAnnouncement: String { String(localized: "search.empty.announcement") }
+
+    static func resultsAnnouncement(count: Int) -> String {
+        String(localized: "search.results_count \(count)")
     }
 }
 

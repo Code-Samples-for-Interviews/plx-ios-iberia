@@ -163,6 +163,16 @@ La subida termina cuando Apple acepta el envío. El procesamiento, las preguntas
 
 **Estado actual:** workflow y script preparados. Validación local de configuración y flujo con comandos simulados. La firma y la subida reales siguen pendientes de cuenta, credenciales y primera ejecución en GitHub. No damos por completado un deploy que todavía no hemos hecho.
 
+## Textos de la interfaz
+
+Usamos un único String Catalog: `AlbumSearch/AlbumSearch/Resources/Localizable.xcstrings`, con español como idioma base. Ahí están los textos de búsqueda y detalle, los errores, las ayudas de accesibilidad y el mensaje de género no disponible. Todavía no añadimos otros idiomas.
+
+Cada archivo que usa textos propios termina con un `private enum Strings`. Seguimos la misma estructura: propiedades calculadas de tipo String que consultan el catálogo con `String(localized:)` y funciones para los textos con parámetros. Por ejemplo, la vista usa `Strings.title` y el enum consulta la clave `search.title`. Para cambiar el texto se edita el catálogo, sin tocar el cuerpo de la vista.
+
+Los anuncios de resultados usan las variaciones de plural del catálogo. No montamos frases concatenando el número ni decidimos el singular con un condicional en la vista. Una prueba comprueba los mensajes para cero, uno y varios resultados.
+
+Las vistas sin textos propios no necesitan un enum vacío. Los nombres de SF Symbols, las claves técnicas y los datos que llegan de iTunes o se usan en las previews no son traducciones de la app. El resumen de accesibilidad sigue siendo el último bloque de cada vista, después del enum; al revisar con VoiceOver también hay que comprobar los anuncios localizados.
+
 ## Presentación y navegación
 
 Usamos **VIP con Coordinator**. La vista muestra el estado, el Interactor coordina la búsqueda, el Presenter prepara lo que se muestra y el Coordinator gestiona la navegación.

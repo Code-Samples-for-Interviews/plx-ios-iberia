@@ -17,10 +17,14 @@ struct ITunesSearchResponse: Decodable {
                 id: collectionId,
                 title: collectionName,
                 artist: artistName,
-                genre: primaryGenreName ?? "Género no disponible",
+                genre: primaryGenreName ?? Strings.unavailableGenre,
                 trackCount: trackCount ?? 0,
                 releaseDate: releaseDate.flatMap { ISO8601DateFormatter().date(from: $0) }
             )
         }
     }
+}
+
+private enum Strings {
+    static var unavailableGenre: String { String(localized: "album.genre_unavailable") }
 }

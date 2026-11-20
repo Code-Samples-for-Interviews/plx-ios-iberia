@@ -35,8 +35,13 @@ final class SearchPresenter {
     private func message(for error: any Error) -> String {
         let connectionErrors: [URLError.Code] = [.notConnectedToInternet, .networkConnectionLost, .timedOut]
         if let urlError = error as? URLError, connectionErrors.contains(urlError.code) {
-            return "No hemos podido conectar con iTunes. Comprueba tu conexión y vuelve a intentarlo."
+            return Strings.connectionError
         }
-        return "No se ha podido completar la búsqueda. Inténtalo de nuevo."
+        return Strings.unexpectedError
     }
+}
+
+private enum Strings {
+    static var connectionError: String { String(localized: "search.error.connection") }
+    static var unexpectedError: String { String(localized: "search.error.unexpected") }
 }
