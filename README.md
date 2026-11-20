@@ -62,6 +62,33 @@ En Xcode, seleccionamos el esquema **AlbumSearch** y ejecutamos **Product → Te
 
 Comprobamos búsquedas vacías, normalización, resultados, errores y cancelación antes y durante la consulta. Usamos repositorios de prueba y controlamos cuándo termina una petición; no hay que esperar a la red ni usar pausas para reproducir la cancelación. En Data también comprobamos la petición, el mapeo, el uso y la expiración de la caché, sus límites y que no guarde errores o respuestas canceladas. La caché tiene además sus propias pruebas de capacidad y cancelación al leer o guardar. Los tests del Presenter comprueban los estados de resultados, lista vacía, carga, reinicio y mensajes de error. Los del Interactor fuerzan respuestas fuera de orden, errores antiguos, limpieza del texto, cancelación y reintento. Los del Coordinator comprueban el álbum que se abre y que solo haya un nivel de detalle.
 
+## Integración continua
+
+<!-- REQUISITO PROPIO [CI]: Job de tests en GitHub Actions con Swift Testing y XCTest. -->
+
+El workflow `.github/workflows/tests.yml` ejecuta el job **Tests iOS** al abrir o actualizar una pull request y al subir cambios a `main`. También podemos lanzarlo desde **Actions → Tests iOS → Run workflow**, cuando el archivo esté en la rama principal.
+
+Usamos `xcodebuild test` con el esquema compartido AlbumSearch. Ese comando compila la app y ejecuta los tests de Swift Testing y XCTest. Si falla la compilación o alguna prueba, el job falla. No necesita certificados ni secretos porque corre en simulador.
+
+El entorno es `macos-15`, Xcode 16.4 y un iPhone 16 con iOS 18.5. Fijamos Xcode y el destino en lugar de depender de la versión predeterminada del runner. Ambos están disponibles en la [imagen de GitHub](https://github.com/actions/runner-images/blob/main/images/macos/macos-15-arm64-Readme.md); habrá que revisar esos valores cuando se actualice el entorno. Esta configuración es para tests; la entrega tendrá su propia configuración.
+
+Para repetir las pruebas desde la raíz del repositorio:
+
+```sh
+xcodebuild test \
+  -project AlbumSearch/AlbumSearch.xcodeproj \
+  -scheme AlbumSearch \
+  -configuration Debug \
+  -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.5' \
+  CODE_SIGNING_ALLOWED=NO
+```
+
+En local hay que tener ese simulador instalado o cambiar el destino por uno disponible. Podemos verlos con `xcodebuild -showdestinations -project AlbumSearch/AlbumSearch.xcodeproj -scheme AlbumSearch`.
+
+Guardamos el `.xcresult` durante siete días como artefacto **resultados-tests-ios**, también si falla alguna prueba. Se descarga desde la ejecución en Actions y se abre con Xcode para revisar los fallos y la cobertura. Si la compilación falla antes de generarlo, el diagnóstico estará en el log del job. Una nueva revisión cancela la ejecución anterior de la misma PR o rama.
+
+El job está preparado y su configuración se ha validado en local. Falta comprobar su primera ejecución real en GitHub después de subir este commit. Para exigirlo antes de integrar una PR, hay que configurar **Tests iOS** como comprobación obligatoria en las reglas de la rama; el archivo por sí solo no bloquea una integración.
+
 ## Presentación y navegación
 
 Usamos **VIP con Coordinator**. La vista muestra el estado, el Interactor coordina la búsqueda, el Presenter prepara lo que se muestra y el Coordinator gestiona la navegación.
@@ -127,14 +154,15 @@ Los comentarios van junto al código que cumple cada punto y, cuando corresponde
 | DIS-01 | SOLID e inyección de dependencias (petición propia) | Contratos en Domain y Data; Interactor recibe caso de uso y Presenter por inicializador. |
 | TEST-03 | Swift Testing y XCTest (petición propia) | Ambos frameworks incluidos. |
 | A11Y-01 | Accesibilidad y resumen al pie de cada vista (petición propia) | Medidas y resúmenes incluidos; auditoría completa pendiente. |
-| CI-01 | Jobs de tests y entrega a TestFlight (petición propia) | Pendiente. |
+| CI-01 | Jobs de tests y entrega a TestFlight (petición propia) | Job de tests preparado; primera ejecución en GitHub y entrega pendientes. |
 | SWIFT-01 | Swift 6 (perfil) | Configurado en Debug y Release. |
 
 <!-- REQUISITO [TEST]: Presenter, Interactor y Coordinator tienen tests de XCTest. -->
-<!-- PENDIENTE PROPIO [CI-01]: Marcar los jobs y su dependencia cuando se implemente el workflow. -->
+<!-- PENDIENTE PROPIO [CI]: Añadir el job de entrega y su dependencia de los tests. -->
 
 ## Lo siguiente
 
-1. Jobs de GitHub para tests y entrega a TestFlight.
+1. Comprobar el job de tests en GitHub.
+2. Añadir el job de entrega a TestFlight, después de los tests.
 
 Iremos actualizando este README con las decisiones y las instrucciones de cada tanda. El `.gitignore` deja fuera archivos locales de Xcode, compilaciones y credenciales.

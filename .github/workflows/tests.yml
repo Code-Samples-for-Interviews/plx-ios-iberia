@@ -1,0 +1,52 @@
+name: Tests iOS
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Una nueva revisión cancela la ejecución anterior de la misma PR o rama.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Ejecutar Swift Testing y XCTest en GitHub Actions.
+  tests:
+    name: Tests iOS
+    runs-on: macos-15
+    timeout-minutes: 20
+    env:
+      # Xcode y destino explícitos para poder reproducir el entorno.
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Mostrar la versión de Xcode
+        run: xcodebuild -version
+
+      - name: Ejecutar los tests
+        run: |
+          xcodebuild test \
+            -project AlbumSearch/AlbumSearch.xcodeproj \
+            -scheme AlbumSearch \
+            -configuration Debug \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.5' \
+            -resultBundlePath "$RUNNER_TEMP/TestResults.xcresult" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Guardar el resultado de las pruebas
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: resultados-tests-ios
+          path: ${{ runner.temp }}/TestResults.xcresult
+          retention-days: 7
+          if-no-files-found: warn
